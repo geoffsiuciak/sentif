@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     return 0;
 }
 ```
-- Allowed clients may connect and are spawned into a new thread. Data members in http::Server maintain client request and response history for the lifetime of the server, which may be periodically logged to a file and/or printed. This data management is thread safe and allows any code to run in the main thread.
+Allowed clients may connect and are spawned into a new thread. Data members in http::Server maintain client request and response history for the lifetime of the server, which may be periodically logged to a file and/or printed. This data management is thread safe and allows any code to run in the main thread.
 
 # to-do
 - tweak request/response management to account for browser behavior
