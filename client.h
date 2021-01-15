@@ -34,7 +34,7 @@
 #define _POST "POST"
 #define _INDEX "/"
 #define __INDEX '/'
-#define __ROOT std::string("/home/xzxthagod/server")
+#define __ROOT std::string("/root/path/here")
 
 #define __BUFFER_SIZE 256
 #define __MAX_REQUEST_QUEUE 10;
