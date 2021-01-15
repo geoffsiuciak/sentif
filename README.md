@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
     // more code may run in main thread
 
-    s.print_client_data_log("10.0.0.789);
+    s.print_client_data_log("10.0.0.789");
 
     return 0;
 }
