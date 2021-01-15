@@ -1,5 +1,6 @@
 # http_server
 C++ classes for quickly implementing a multithreaded HTTP/\*nix socket server.
+- Allowed clients may connect and are spawned into a new thread. Data members in http::Server maintain client request and response history for the lifetime of the server, which may be periodically logged to a file and/or printed. This data management is thread safe and allows any code to run in the main thread.
 ```
 // basic usage
 
