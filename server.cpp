@@ -254,7 +254,7 @@ void Server::kill()
 	close(server_socket);
 	// log_client_DB_to_file
 
-	printf("* SERVER KILLED *\n");
+	printf("* killed *\n");
 }
 
 
