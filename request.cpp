@@ -17,7 +17,7 @@ Request::Request(const char* buffer, int length)
 }
 
 
-Request::Request(const std:string& input)
+Request::Request(const std::string& input)
 {
 	// called only by a LocalClient
 
@@ -75,9 +75,9 @@ void Request::log_file()
 void Request::log_out()
 {
 	// std::lock_guard<std::mutex> gaurd(request_lock);
-	printf("REQUEST LOG:\n");
-	std::cout << "-> " << buffer_string
-		      << "TIME: " << time
+	std::cout << "request log:\n"
+	          << "-> " << buffer_string
+		      << "time: " << time
 		      << "\n\n";
 }
 

@@ -21,7 +21,8 @@ class Request
 
 public:
 	Request(const char*, int);
-	Request(const std::string&, int);
+	// Request(const std::string&, int);
+	Request(const std::string &);
 	const std::string& get_request() const;
 	const std::string& get_method() const;
 	const std::string& get_path() const;
