@@ -34,7 +34,7 @@
 #define _POST "POST"
 #define _INDEX "/"
 #define __INDEX '/'
-#define __ROOT std::string("/root/path/here")
+#define __ROOT std::string("/home/xzxthagod/server")
 
 #define __BUFFER_SIZE 256
 #define __MAX_REQUEST_QUEUE 10;
@@ -78,7 +78,9 @@ namespace http
 		void post_response();
 		void process_request();
 		void log_data__();
-		void read_from_file(const char*);
+		bool read_from_file(int, const char *, int *);
+		bool write_to_client(int, const char *, int);
+
 
 	private:
 		void generate_default_response();
