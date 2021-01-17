@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     http::Server s(argc, argv);
     s.go();
 
-    /* perform any action while server is running */
+    /* any code may run in the main thread */
     s.ban_IP("10.0.0.123");
     s.print_IP_banlist();
     s.set_host_IP("10.0.0.175");
@@ -26,14 +26,11 @@ int main(int argc, char** argv)
     s.run_for(60);
     s.kill();
 
-    // more code may run in main thread
-
     s.print_client_data_log("10.0.0.789");
 
     return 0;
 }
 ```
-Allowed clients may connect and are spawned into a new thread. Data members in http::Server maintain client request and response history for the lifetime of the server, which may be periodically logged to a file and/or printed. This data management is thread safe and allows any code to run in the main thread.
 
 # to-do
 - tweak request/response management to account for browser behavior
@@ -41,4 +38,3 @@ Allowed clients may connect and are spawned into a new thread. Data members in h
 - finish writing, both file contents and packet headers
 - finish LocalClient and remaining incomplete methods
 
-Sort of turning into a sandbox project, though I intend to continue building on this. Intended for use on a secure local network, perhaps on a raspberry pi...
