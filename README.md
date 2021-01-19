@@ -1,5 +1,5 @@
 # http_server
-C++ classes for quickly implementing a multithreaded HTTP/\*nix socket server.
+C++ classes for quickly implementing a multithreaded HTTP/\*nix socket server
 ```
 // basic usage
 
