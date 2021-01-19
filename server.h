@@ -113,7 +113,6 @@ namespace http
 		std::vector<std::string> IP_whitelist;
 		std::vector<std::string> IP_banlist;
 		std::vector<std::shared_ptr<Client>> client_DB;
-		// dllist<std::shared_ptr<Client>> client_DB;
 	};
 
 }

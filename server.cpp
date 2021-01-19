@@ -236,7 +236,7 @@ void Server::main_accept_loop()
 					db_guard.unlock();
 
 					std::shared_ptr<Client> RUN_client_ptr = client_ptr;
-					RUN_client_ptr->handle();
+					RUN_client_ptr->main_loop();
 				}
 				else { client_ptr->deny(); }
 			}
