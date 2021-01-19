@@ -26,6 +26,7 @@
 #include <mutex>
 #include <map>
 
+#include <exception>
 #include "http_codes.h"
 #include "request.h"
 #include "response.h"
@@ -47,6 +48,8 @@ namespace http
 	struct Client_Data
 	{
 		int socket_ID;
+		std::vector<char> msg_buf(256);
+		
 		sockaddr_in TCP_struct;
 		std::string IP4_address;
 		std::string session_start_time;
@@ -63,11 +66,11 @@ namespace http
 	{
 	public:
 		explicit Client(int, sockaddr_in);
-		void handle();
+		void main_loop();
 		void log_connection();
 		const std::string& get_IP() const;
 		int get_count();
-		bool got_buffer();
+		bool new_message();
 		char* return_buffer() { return this->client_data->read_buffer; }
 		bool is_alive();
 		void client_end_log();
@@ -75,12 +78,12 @@ namespace http
 		int search();
 		void serve(Request&, int);
 		void deny();
-		void post_response();
 		void process_request();
 		void log_data__();
 		bool read_from_file(int, const char *, int *);
 		bool write_to_client(int, const char *, int);
 
+		std::vector<char> readMessage();
 
 	private:
 		void generate_default_response();
@@ -91,7 +94,7 @@ namespace http
 		std::mutex client_lock;
 		
 		int request_count{};
-		std::shared_ptr<Client_Data> client_data;
+		std::unique_ptr<Client_Data> info;
 	};
 }
 
