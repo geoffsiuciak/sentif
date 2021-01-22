@@ -6,20 +6,20 @@ using namespace http;
 
 Client::Client(int socket_ID, sockaddr_in TCP_struct)
 {
-	this->info = std::make_unique<Client_Data>();
-	this->info->socket_ID = socket_ID;
-	this->info->TCP_struct = TCP_struct;
+	// this->info = std::make_unique<Client_Data>();
+	this->socket_ID = socket_ID;
+	this->TCP_struct = TCP_struct;
 
-	this->info->IP4_address =
-		std::string(inet_ntoa(this->info->TCP_struct.sin_addr));
+	IP4_address =
+		std::string(inet_ntoa(this->TCP_struct.sin_addr));
 
-	this->info->session_start_time =
+	this->session_start_time =
 		std::string("*session_start_time 12.34*"); // TO-DO
 
-	this->info->current_buffer_len = 0;
-	this->info->request_count = 0;
-	this->info->time_alive = 0.0;
-	this->info->client_alive = true;
+	this->read_buffer.resize(BUFFER_SIZE);
+	this->request_count = 0;
+	this->time_alive = 0.0;
+	this->client_alive = true;
 }
 
 
@@ -29,7 +29,7 @@ Client::Client(int socket_ID, sockaddr_in TCP_struct)
 void Client::main_loop()
 {
 	log_connection();
-	while (info->client_alive)
+	while (client_alive)
 	{
 		if (new_message()) {
 			process_request();
@@ -42,58 +42,25 @@ void Client::main_loop()
 bool Client::new_message()
 {
 	int msg_len = 0;
-	info->msg_buf.resize(0);
+	read_buffer.resize(BUFFER_SIZE);
 
 	try {
-		msg_len = read(info->socket_ID, info->msg_buf.data(), BUFFER_SIZE);
-
-		if (msg_len < 0) {
+		if (msg_len = read(
+			socket_ID, read_buffer.data(), BUFFER_SIZE - 1) <= 0) 
 			throw std::runtime_error("client quit: ");
-		}
-		else if (msg_len == 0) {
-			info->session_requests.emplace_back(info->read_buffer, msg_len);
-		}
-		else {
-			info->session_requests.emplace_back(info->read_buffer, msg_len);
-		}
 	}
 	catch (const std::runtime_error& e) {
-		info->client_alive = false;
+		client_alive = false;
 		std::lock_guard<std::mutex> gaurd(client_lock);
-		std::cout << e.what() << info->IP4_address << "\n\n";
+		std::cout << e.what() << IP4_address << "\n\n";
 		return false;
 	}
 
-	
+	session_requests.emplace_back(Request(read_buffer.data()));
 
 	return true;
 }
 
-
-/*
-bool Client::new_message()
-{
-	info->current_buffer_len = 0;
-	memset(info->read_buffer, 0, BUFFER_SIZE);
-
-	try {
-		if (info->current_buffer_len = read(
-			info->socket_ID, info->read_buffer, BUFFER_SIZE - 1) <= 0) 
-			throw std::runtime_error("client quit: ");
-	}
-	catch (const std::runtime_error& e) {
-		info->client_alive = false;
-		std::lock_guard<std::mutex> gaurd(client_lock);
-		std::cout << e.what() << info->IP4_address << "\n\n";
-		return false;
-	}
-
-	info->session_requests.
-		emplace_back(Request(info->read_buffer, info->current_buffer_len));
-
-	return true;
-}
-*/
 
 void Client::o(const char* out)
 {
@@ -104,23 +71,29 @@ void Client::o(const char* out)
 
 void Client::process_request()
 {
-	Request& curr_req = info->session_requests.back();
-  
-	if (curr_req.get_method() == "GET" && curr_req.get_path() == "/"
-		&& curr_req.clean()) { generate_default_response(); } 
-	else 
-	if (curr_req.get_method() == "GET" && curr_req.get_path()[0] == '/'
-		&& curr_req.get_path().size() > 1 && curr_req.clean())
-	{ generate_unique_response(); }
-	
-	else { generate_error_response(BAD_REQUEST); }
+	Request& curr_req = session_requests.back();
+
+	if (curr_req.get_method() == "GET" && 
+	    curr_req.get_path() == "/" && 
+		curr_req.clean()) { 
+			generate_default_response(); 
+	} 
+	else if (curr_req.get_method() == "GET" && 
+	         curr_req.get_path()[0] == '/' &&
+			 curr_req.get_path().size() > 1 && 
+			 curr_req.clean()) { 
+			 	generate_unique_response();
+	}
+	else {
+		generate_error_response(BAD_REQUEST);
+	}
 }
 
 
 void Client::generate_error_response(int http_code)
 {
 	o("error");
-	info->session_responses.emplace_back(Response(http_code));
+	session_responses.emplace_back(Response(http_code));
 }
 
 
@@ -165,8 +138,8 @@ void Client::generate_unique_response()
 		const char* content_buffer = nullptr;
 
 		if (read_from_file(file_fd, content_buffer, &file_size)) {
-			if (write_to_client(info->socket_ID, content_buffer, file_size)) {
-				info->session_responses.emplace_back(Response(OK));
+			if (write_to_client(socket_ID, content_buffer, file_size)) {
+				session_responses.emplace_back(Response(OK));
 			}
 		}
 		else { generate_error_response(INTERNAL_SERVER_ERROR); }
@@ -180,13 +153,13 @@ void Client::generate_unique_response()
 
 bool Client::is_alive()
 {
-	return info->client_alive;
+	return client_alive;
 }
 
 
 int Client::get_count()
 {
-	return info->request_count;
+	return request_count;
 }
 
 
@@ -195,37 +168,34 @@ void Client::deny()
 	int ec{};
 	const char buff[19]{ "CONNECTION DENIED\n" };
 
-	write(info->socket_ID, (const void*)buff, 19);
-	info->client_alive = false;
-	close(this->info->socket_ID);
+	write(socket_ID, (const void*)buff, 19);
+	client_alive = false;
+	close(this->socket_ID);
 
 	std::lock_guard<std::mutex> guard(client_lock);
-	std::cout << "banned IP denied: " << info->IP4_address << "\n\n";
+	std::cout << "banned IP denied: " << IP4_address << "\n\n";
 }
 
 
 int Client::search()
 {
-	std::string _root("/home/xzxthagod/server");
-	const char* _root_ptr = _root.c_str();
-
-	DIR* root_ptr = opendir(_root_ptr);
+	char root[23]{"/home/xzxthagod/server"};
+	DIR* root_ptr = opendir(root);
 	struct dirent* entry = nullptr;
 
-	std::string path = info->session_requests.back().get_path();
+	auto path = session_requests.back().get_path();
+	path.erase(0, 1);
 	int target_fd = 0;
-	
-	// -- //
 
 	while ((entry = readdir(root_ptr)) != NULL && target_fd == 0) 
 	{
-		if (std::string(entry->d_name) == path) {
+		if (entry->d_name == path) {
 			if (entry->d_type == DT_REG) 
 			{
-				std::string full_path = _root + path;
+				printf("here\n");
+				std::string full_path = root + '/' + path;
 				const char* c_path = full_path.c_str();
-				std::cout << c_path << std::endl;
-
+				// std::cout << c_path << std::endl;
 				target_fd = open(c_path, O_RDONLY, 0644);
 			}
 			else if (entry->d_type == DT_DIR) {
@@ -234,7 +204,6 @@ int Client::search()
 		}
 	}
 
-	// -- //
 	std::cout << target_fd << '\n';
 	return target_fd;
 }
@@ -243,7 +212,7 @@ int Client::search()
 void Client::log_connection()
 {
 	std::lock_guard<std::mutex> gaurd(client_lock);
-	std::cout << "new client: " << info->IP4_address << "\n\n";
+	std::cout << "new client: " << IP4_address << "\n\n";
 }
 
 
@@ -254,13 +223,13 @@ void Client::generate_default_response()
 	// const char* 
 
 	// read_from_file("index.html");
-	info->session_responses.emplace_back(Response(OK, "index.html"));
+	session_responses.emplace_back(Response(OK, "index.html"));
 }
 
 
 const std::string& Client::get_IP() const
 {
-	return info->IP4_address;
+	return IP4_address;
 }
 
 
@@ -268,11 +237,11 @@ void Client::client_end_log()
 {
 	std::lock_guard<std::mutex> gaurd(client_lock);
 	std::cout << "client log:\n"
-		      << "[ " << info->IP4_address << " ]"
-		      << "joined at: " << info->session_start_time << "\n\n";
+		      << "[ " << IP4_address << " ]"
+		      << "joined at: " << session_start_time << "\n\n";
 
-	std::for_each(info->session_requests.begin(), 
-			      info->session_requests.end(),
+	std::for_each(session_requests.begin(), 
+			      session_requests.end(),
 				 [&](Request request) { std::cout << request; }
 	);
 }
@@ -283,13 +252,13 @@ void Client::log_data__()
 	/*std::lock_guard<std::mutex> gaurd(client_lock);
 	int i = 
 
-	std::cout << "session start: " << info->session_start_time << "\n";
+	std::cout << "session start: " << session_start_time << "\n";
 
-	std::for_each(info->session_requests.begin(),
-		          info->session_requests.end(),
+	std::for_each(session_requests.begin(),
+		          session_requests.end(),
 		[&]() {
-			std::cout << info->session_requests[i];
-			std::cout << info->session_responses[i];
+			std::cout << session_requests[i];
+			std::cout << session_responses[i];
 			++i;
 		}
 	);*/
