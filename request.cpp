@@ -1,15 +1,10 @@
 #include "request.h"
 
 
-Request::Request(const char* buffer, int length)
+Request::Request(const char* buffer)
 {
-	// try?
-	// char new_buffer[length];
-	// memcpy(new_buffer, buffer, length);
-
 	this->buffer_string = std::string(buffer);
-	this->time = "4:20";
-	this->length = length;
+	this->time = init_time();
 
 	std::stringstream ss(buffer_string);
 	ss >> method;
@@ -17,17 +12,9 @@ Request::Request(const char* buffer, int length)
 }
 
 
-Request::Request(const std::string& input)
+std::string Request::init_time()
 {
-	// called only by a LocalClient
-
-	this->buffer_string = input;
-	this->time = "4:20";
-	this->length = buffer_string.size();
-
-	std::stringstream ss(buffer_string);
-	ss >> method;
-	ss >> path;
+	return "00:00 date";
 }
 
 

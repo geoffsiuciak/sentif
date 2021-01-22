@@ -21,9 +21,8 @@ class Request
 	friend std::ostream& operator<<(std::ostream&, const Request&);
 
 public:
-	Request(const char*, int);
-	// Request(const std::string&, int);
-	Request(const std::string &);
+	Request(const char*);
+	std::string init_time();
 	const std::string& get_request() const;
 	const std::string& get_method() const;
 	const std::string& get_path() const;
