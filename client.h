@@ -31,15 +31,9 @@
 #include "request.h"
 #include "response.h"
 
-#define _GET "GET"
-#define _POST "POST"
-#define _INDEX "/"
-#define __INDEX '/'
-#define __ROOT std::string("/home/xzxthagod/server")
 
-#define __BUFFER_SIZE 256
-#define __MAX_REQUEST_QUEUE 10;
-typedef std::string::iterator string_itr;
+#define BUFFER_SIZE 256
+#define MAX_REQUEST_QUEUE 10;
 
 
 namespace http
@@ -48,12 +42,12 @@ namespace http
 	struct Client_Data
 	{
 		int socket_ID;
-		std::vector<char> msg_buf(256);
-		
+		std::vector<char> msg_buf;
+
 		sockaddr_in TCP_struct;
 		std::string IP4_address;
 		std::string session_start_time;
-		char read_buffer[__BUFFER_SIZE];
+		char read_buffer[BUFFER_SIZE];
 		int current_buffer_len;
 		int request_count;
 		double time_alive;
@@ -71,10 +65,10 @@ namespace http
 		const std::string& get_IP() const;
 		int get_count();
 		bool new_message();
-		char* return_buffer() { return this->client_data->read_buffer; }
+		char* return_buffer() { return this->info->read_buffer; }
 		bool is_alive();
 		void client_end_log();
-		int get_request_count() { return this->client_data->request_count; }
+		int get_request_count() { return this->info->request_count; }
 		int search();
 		void serve(Request&, int);
 		void deny();

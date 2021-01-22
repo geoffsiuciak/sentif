@@ -40,7 +40,7 @@ void Server::init_server_info()
 	memset(&server_info, 0, sizeof(server_info));
 	server_info.sin_family = AF_INET;
 
-	if (__LOCAL_HOST == 1) {
+	if (LOCAL_HOST == 1) {
 		server_info.sin_port = inet_addr("127.0.0.1");
 	}
 	else {
@@ -48,7 +48,7 @@ void Server::init_server_info()
 	}
 
 	server_info.sin_port = htons(port);
-	__CALLED = true;
+	CALLED = true;
 }
 
 
@@ -67,7 +67,7 @@ void Server::launch_thread_manager()
 
 	std::thread thread_manager(
 		[&](){
-			while (__RUNNING)
+			while (RUNNING)
 			{
 
 			}
@@ -90,14 +90,14 @@ bool Server::setup()
 		bail("failed to bind");
 	}
 	
-	__SETUP = true;
+	SETUP = true;
 
-	if (listen(server_socket, __QUEUE_SIZE) == -1) {
+	if (listen(server_socket, QUEUE_SIZE) == -1) {
 		bail("failed to listen");
 	}
 		
 	printf("* server running on port %i *\n\n", this->port);
-	__RUNNING = true;
+	RUNNING = true;
 
 	return true;
 } 
@@ -105,8 +105,8 @@ bool Server::setup()
 
 bool Server::connections_allowed() const
 {
-	return (active_clients < __MAX_CONNECTIONS
-		    and __RUNNING) ? true : false;
+	return (active_clients < MAX_CONNECTIONS
+		    and RUNNING) ? true : false;
 }
 
 
@@ -134,19 +134,6 @@ void Server::print_IP_banlist() const
 	);
 	
 	printf("\n");
-}
-
-
-void Server::set_rules(int per_minute, int per_session)
-{
-	std::lock_guard<std::mutex> gaurd(server_lock);
-	this->_per_minute = per_minute;
-	this->_per_session = per_session;
-	
-	std::cout << "RULES UPDATED:"
-		<< "\nrequests allowed/client/minute: " << this->_per_minute
-		<< "\nrequests allowed/client/session: " << this->_per_session
-		<< "\n\n";
 }
 
 
@@ -250,7 +237,7 @@ void Server::kill()
 {
 	std::lock_guard<std::mutex> gaurd(server_lock);
 
-	__RUNNING = false;
+	RUNNING = false;
 	close(server_socket);
 	// log_client_DB_to_file
 
@@ -263,7 +250,7 @@ void Server::launch_client_DB_logger()
 	int entries_logged{};
 	auto logger = [&]()
 	{
-		while (__RUNNING)
+		while (RUNNING)
 		{
 			std::lock_guard<std::mutex> guard(server_lock);
 			std::ofstream client_DB_file;
@@ -280,7 +267,7 @@ void Server::launch_client_DB_logger()
 			}
 
 			client_DB_file.close();
-			sleep(__DEFAULT_LOG_INTERVAL);
+			sleep(DEFAULT_LOG_INTERVAL);
 		}
 	};
 
@@ -341,7 +328,7 @@ void http::bail(const char* err_msg)
 void Server::go()
 {
 	setup();
-	if (__CALLED && __RUNNING)
+	if (CALLED && RUNNING)
 	{
 		std::thread main_loop([this]()->void{main_accept_loop();});
 		main_loop.detach();

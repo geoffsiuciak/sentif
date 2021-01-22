@@ -6,7 +6,7 @@ using namespace http;
 
 Client::Client(int socket_ID, sockaddr_in TCP_struct)
 {
-	this->info = std::make_shared<info>();
+	this->info = std::make_unique<Client_Data>();
 	this->info->socket_ID = socket_ID;
 	this->info->TCP_struct = TCP_struct;
 
@@ -45,16 +45,16 @@ bool Client::new_message()
 	info->msg_buf.resize(0);
 
 	try {
-		msg_len = read(info->socket_ID, info->msg_buf.data(), __BUFFER_SIZE);
+		msg_len = read(info->socket_ID, info->msg_buf.data(), BUFFER_SIZE);
 
 		if (msg_len < 0) {
 			throw std::runtime_error("client quit: ");
 		}
 		else if (msg_len == 0) {
-			info->session_requests.emplace_back(Request(info->msg_buf);
+			info->session_requests.emplace_back(info->read_buffer, msg_len);
 		}
 		else {
-			info->session_requests.emplace_back(Request(info->msg_buf));
+			info->session_requests.emplace_back(info->read_buffer, msg_len);
 		}
 	}
 	catch (const std::runtime_error& e) {
@@ -70,15 +70,15 @@ bool Client::new_message()
 }
 
 
-
+/*
 bool Client::new_message()
 {
 	info->current_buffer_len = 0;
-	memset(info->read_buffer, 0, __BUFFER_SIZE);
+	memset(info->read_buffer, 0, BUFFER_SIZE);
 
 	try {
 		if (info->current_buffer_len = read(
-			info->socket_ID, info->read_buffer, __BUFFER_SIZE - 1) <= 0) 
+			info->socket_ID, info->read_buffer, BUFFER_SIZE - 1) <= 0) 
 			throw std::runtime_error("client quit: ");
 	}
 	catch (const std::runtime_error& e) {
@@ -93,7 +93,7 @@ bool Client::new_message()
 
 	return true;
 }
-
+*/
 
 void Client::o(const char* out)
 {
@@ -106,10 +106,10 @@ void Client::process_request()
 {
 	Request& curr_req = info->session_requests.back();
   
-	if (curr_req.get_method() == _GET && curr_req.get_path() == _INDEX
+	if (curr_req.get_method() == "GET" && curr_req.get_path() == "/"
 		&& curr_req.clean()) { generate_default_response(); } 
 	else 
-	if (curr_req.get_method() == _GET && curr_req.get_path()[0] == __INDEX
+	if (curr_req.get_method() == "GET" && curr_req.get_path()[0] == '/'
 		&& curr_req.get_path().size() > 1 && curr_req.clean())
 	{ generate_unique_response(); }
 	
@@ -131,7 +131,7 @@ bool Client::read_from_file(int file_fd, const char* content_buffer, int* file_s
 	while (_read > 0) { 
 		if (_read = read(file_fd, 
 		                 (void*)content_buffer, 
-						  __BUFFER_SIZE) == -1) {
+						  BUFFER_SIZE) == -1) {
 			return false;
 		}
 		else { *file_size += _read; }
@@ -206,7 +206,7 @@ void Client::deny()
 
 int Client::search()
 {
-	std::string _root(__ROOT);
+	std::string _root("/home/xzxthagod/server");
 	const char* _root_ptr = _root.c_str();
 
 	DIR* root_ptr = opendir(_root_ptr);

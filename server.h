@@ -32,16 +32,16 @@
 #include "response.h"
 #include "local_client.h"
 
-#define __MODE 0
-#define __LOCAL_HOST 1
-#define __QUEUE_SIZE 100
-#define __MAX_CONNECTIONS 100
-#define __DEFAULT_PER_MIN 30
-#define __DEFAULT_PER_SESSION 100
-#define __DEFAULT_HISTORY_SAVED 250
-#define __DEFAULT_CLIENTS_SAVED 500
-#define __DEFAULT_LOG_INTERVAL 30
-#define __DEFAULT_INIT_THREAD_COUNT 25
+#define MODE 0
+#define LOCAL_HOST 1
+#define QUEUE_SIZE 100
+#define MAX_CONNECTIONS 100
+#define DEFAULT_PER_MIN 30
+#define DEFAULT_PER_SESSION 100
+#define DEFAULT_HISTORY_SAVED 250
+#define DEFAULT_CLIENTS_SAVED 500
+#define DEFAULT_LOG_INTERVAL 30
+#define DEFAULT_INIT_THREAD_COUNT 25
 
 
 namespace http
@@ -61,8 +61,7 @@ namespace http
 		void ban_IP(const char*);
 		void print_IP_banlist() const;
 		bool connections_allowed() const;
-		void set_host_IP(const char*);
-		void set_rules(int, int);
+		void set_host_IP(const char *);
 		void send_request(const char*);
 		void send_request(std::string);
 		void LOG(int, const char*) noexcept;
@@ -98,13 +97,11 @@ namespace http
 		int server_socket{};
 		int request_count{};
 		int active_clients{};
-		bool __CALLED = false;
-		bool __SETUP = false;
-		bool __RUNNING = false;
+		bool CALLED = false;
+		bool SETUP = false;
+		bool RUNNING = false;
 
 		sockaddr_in server_info;
-		int _per_minute = __DEFAULT_PER_MIN;
-		int _per_session = __DEFAULT_PER_SESSION;
 		
 		std::mutex server_lock;
 		std::condition_variable cond_var;
