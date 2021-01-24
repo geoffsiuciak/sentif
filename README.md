@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 ```
 
 # to-do/status
-- LocalClient responses need own type
+- need generic message container type
 - tweak request/response management to account for browser behavior
 - thread pool/task queue over individual client thread inits
 - finish writing, both file contents and packet headers
