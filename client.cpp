@@ -135,7 +135,7 @@ void Client::generate_unique_response()
 	if (file_fd > -1) {
 
 		int file_size = 0;
-		const char* content_buffer = nullptr;
+		char content_buffer = nullptr;
 
 		if (read_from_file(file_fd, content_buffer, &file_size)) {
 			if (write_to_client(socket_ID, content_buffer, file_size)) {
@@ -192,10 +192,8 @@ int Client::search()
 		if (entry->d_name == path) {
 			if (entry->d_type == DT_REG) 
 			{
-				printf("here\n");
 				std::string full_path = root + '/' + path;
 				const char* c_path = full_path.c_str();
-				// std::cout << c_path << std::endl;
 				target_fd = open(c_path, O_RDONLY, 0644);
 			}
 			else if (entry->d_type == DT_DIR) {
