@@ -97,14 +97,15 @@ void Client::generate_error_response(int http_code)
 }
 
 
-bool Client::read_from_file(int file_fd, const char* content_buffer, int* file_size) 
+bool Client::read_from_file(int file_fd, char* content_buffer, int* file_size) 
 {
 	int _read = 1;
 
 	while (_read > 0) { 
-		if (_read = read(file_fd, 
-		                 (void*)content_buffer, 
-						  BUFFER_SIZE) == -1) {
+		if (_read = read(file_fd, (void*)content_buffer, 10) == -1) {
+			printf("HERE\n");
+			perror("read");
+			exit(1);
 			return false;
 		}
 		else { *file_size += _read; }
@@ -114,19 +115,6 @@ bool Client::read_from_file(int file_fd, const char* content_buffer, int* file_s
 }
 
 
-bool Client::write_to_client(int socket_fd, const char* content_buffer, int file_size) 
-{
-	int _write{};
-	if (_write = write(socket_fd, (void*)content_buffer, file_size) == -1) {
-		return false;
-	}
-	else { return true; }
-}
-
-
-// bool Client::post_reponse()
-
-
 void Client::generate_unique_response()
 {
 	o("unique");
@@ -134,19 +122,25 @@ void Client::generate_unique_response()
 	int file_fd = search();
 	if (file_fd > -1) {
 
-		int file_size = 0;
-		char content_buffer = nullptr;
+		int bytes_read = 1;
+		char buffer[10];
 
-		if (read_from_file(file_fd, content_buffer, &file_size)) {
-			if (write_to_client(socket_ID, content_buffer, file_size)) {
-				session_responses.emplace_back(Response(OK));
-			}
+		while (bytes_read > 0)
+		{
+			bytes_read = read(file_fd, buffer, 10);
+			write(this->socket_ID, buffer, bytes_read);
 		}
-		else { generate_error_response(INTERNAL_SERVER_ERROR); }
+
+		session_responses.emplace_back(Response(OK));
+		/* else { generate_error_response(INTERNAL_SERVER_ERROR); }
+		   need to come back for sys call error handling
+		*/
+
+		close(file_fd);
 	}
 	else { 
 		close(file_fd);
-		generate_error_response(BAD_REQUEST);
+		generate_error_response(NOT_FOUND);
 	}
 }
 

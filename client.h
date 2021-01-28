@@ -57,8 +57,8 @@ namespace http
 		void deny();
 		void process_request();
 		void log_data__();
-		bool read_from_file(int, const char *, int *);
-		bool write_to_client(int, const char *, int);
+		bool read_from_file(int, char *, int *);
+		bool write_to_client(int, char *, int);
 
 	private:
 		void generate_default_response();
