@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     s.print_client_data_log("10.0.0.789");
 	
 	for (http::Message msg : lr) {
-		std::cout << msg;
+		// std::cout << msg;
 	}
 
 	return 0;
