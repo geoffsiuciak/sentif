@@ -42,3 +42,4 @@ int main(int argc, char** argv)
 # to-do/status
 - need generic message container type
 - thread pool/task queue over individual client thread inits
+- LocalClient methods, seperate application probably
