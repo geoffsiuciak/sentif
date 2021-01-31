@@ -11,29 +11,34 @@ C++ classes for quickly implementing a multithreaded HTTP/\*nix socket server
 int main(int argc, char** argv)
 {
     http::Server s(argc, argv);
-    s.go();
+	s.go();
 
-    /* any code may run in the main thread */
-    s.ban_IP("10.0.0.123");
-    s.print_IP_banlist();
-    s.set_host_IP("10.0.0.175");
+	/* perform any action while server is running */
+	s.ban_IP("10.0.0.123");
+	// s.ban_IP("127.0.0.1");
+	s.print_IP_banlist();
+	s.set_host_IP("10.0.0.175");
 
-    std::cout << "host is: " << s.get_host_IP() << "\n\n";
+	http::LocalClient lcl;
+	std::vector<http::Message> lr;
 
-    http::LocalClient l;
-    auto response = l.GET("page_request_here.html");
+	lr.push_back(lcl.GET("index.html"));
+	lr.push_back(lcl.GET("this_page.html"));
+	lr.push_back(lcl.GET("anothers.html"));
 
-    s.run_for(60);
+	s.run_for(60);
     s.kill();
 
     s.print_client_data_log("10.0.0.789");
+	
+	for (http::Message msg : lr) {
+		std::cout << msg;
+	}
 
-    return 0;
+	return 0;
 }
 ```
 
 # to-do/status
 - need generic message container type
-- tweak request/response management to account for browser behavior
 - thread pool/task queue over individual client thread inits
-- finish writing, both file contents and packet headers
