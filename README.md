@@ -43,3 +43,4 @@ int main(int argc, char** argv)
 - need generic message container type
 - thread pool/task queue over individual client thread inits
 - LocalClient methods, seperate application probably
+- need some compile time options
