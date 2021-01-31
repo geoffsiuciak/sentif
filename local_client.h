@@ -7,6 +7,7 @@
 #include <vector>
 #include "request.h"
 #include "response.h"
+#include "message.h"
 
 
 namespace http
@@ -15,10 +16,11 @@ namespace http
 	class LocalClient
 	{
 	public:
-		LocalClient(const std::string&);
-		void* GET(const char*);
-		Response& GET(const std::string&);
+		LocalClient() = default;
+		Message GET(const char*);
+		Message GET(const std::string&);
 		int search(const std::string&);
+
 	private:
 		std::string root{};
 	};
