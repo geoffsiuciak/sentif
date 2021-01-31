@@ -31,6 +31,7 @@
 #include "request.h"
 #include "response.h"
 #include "local_client.h"
+#include "message.h"
 
 #define MODE 0
 #define LOCAL_HOST 1
