@@ -12,7 +12,7 @@ Server::Server(int argc, char** argv)
 	init_server_info();
 	init_thread_pool();
 
-	LOG(1, "* server ready to go() *\n");
+	LOG("* server ready to go() *");
 }
 
 
@@ -20,7 +20,7 @@ Server::Server(int argv_1, std::string argv_2) : port(argv_1), root(argv_2)
 {
 	init_server_info();
 	init_thread_pool();
-	LOG(1, "* server ready to go() *\n");
+	LOG("* server ready to go() *");
 }
 
 
@@ -40,12 +40,18 @@ void Server::init_server_info()
 	memset(&server_info, 0, sizeof(server_info));
 	server_info.sin_family = AF_INET;
 
-	if (LOCAL_HOST == 1) {
-		server_info.sin_port = inet_addr("127.0.0.1");
-	}
-	else {
-		server_info.sin_addr.s_addr = INADDR_ANY;
-	}
+	// if (LOCAL_HOST == 1) {
+	// 	server_info.sin_port = inet_addr("127.0.0.1");
+	// }
+	// else {
+	// 	server_info.sin_addr.s_addr = INADDR_ANY;
+	// }
+
+	#ifdef LOCAL_HOST
+	server_info.sin_port = inet_addr("127.0.0.1");
+	#elif 
+	server_info.sin_addr.s_addr = INADDR_ANY;
+	#endif
 
 	server_info.sin_port = htons(port);
 	CALLED = true;
@@ -82,10 +88,17 @@ bool Server::setup()
 	socklen_t server_len = sizeof(server_info);
 	auto* server_ptr = (sockaddr*)&server_info;
 
-	if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	#ifdef SET_TCP
+    if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		bail("failed to establish socket");
 	}
-		
+
+	#elif SET_UDP
+	if ((server_socket = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		bail("failed to establish socket");
+	}
+	#endif 
+
 	if (bind(server_socket, server_ptr, sizeof(server_info)) < 0) {
 		bail("failed to bind");
 	}
@@ -105,16 +118,30 @@ bool Server::setup()
 
 bool Server::connections_allowed() const
 {
-	return (active_clients < MAX_CONNECTIONS
-		    and RUNNING) ? true : false;
+	return (active_clients < MAX_CONNECTIONS and RUNNING) ? true : false;
 }
 
 
-void Server::ban_IP(const char* ip_to_ban)
+void Server::ban(const char* ip_to_ban)
 {
-	std::lock_guard<std::mutex> gaurd(server_lock);
 	this->IP_banlist.emplace_back(std::string(ip_to_ban));
 	std::cout << "BANNED IP: " << IP_banlist.back() << "\n\n";
+}
+
+
+void Server::ban(const std::string& IP)
+{
+	this->IP_banlist.emplace_back(std::string(IP));
+
+	std::string log = "BANNED IP: " + IP;
+	interp_LOG(log);
+}
+
+
+void Server::interp_LOG(const std::string& msg)
+{
+	std::lock_guard<std::mutex> gaurd(server_lock);
+	std::cout << "\n\n" << msg << "\n\n";
 }
 
 
@@ -140,32 +167,6 @@ void Server::print_IP_banlist() const
 void Server::set_host_IP(const char* host)
 {
 	this->host_IP = std::string(host);
-}
-
-
-void Server::print_client_data_log(const char* client_IP)
-{
-	std::lock_guard<std::mutex> lock(server_lock);
-	std::cout << "-- data log for client [ " << client_IP << " ] --\n";
-
-	if (client_DB.size() == 0) {
-		std::cout << "* no sessions this runtime *\n";
-	}
-
-	std::for_each(client_DB.begin(), client_DB.end(),
-		[&](std::shared_ptr<Client> client) {
-			if (strcmp(client_IP, (client->get_IP()).c_str()) != -1) {
-				client->log_data__();
-			}
-		});
-
-	std::cout << "-- end data log --\n\n";
-}
-
-
-void Server::print_client_data_log(std::string client_IP)
-{
-
 }
 
 
@@ -360,21 +361,109 @@ void Server::send_request(std::string)
 }
 
 
-void Server::LOG(int stream, const char* msg) noexcept
+void Server::LOG(const char* msg) noexcept
 {
 	std::lock_guard<std::mutex> gaurd(server_lock);
-	write(stream, msg, strlen(msg));
+	// write(1, msg, strlen(msg));
+	std::cout << "\n\n" << msg << "\n\n";
 }
 
 
-void Server::DEBUG()
+void Server::interp_loop()
 {
-	printf("DEBUG\n\n");
-	/*std::lock_guard<std::mutex> guard(server_lock);
-	std::cout << "*** debug dump ***\n";
+	std::thread interp([this]()->void{
+		while (RUNNING) {
+		std::string entry;
+		std::cout << "serv~$ ";
+		std::getline (std::cin, entry);
+		interpret(entry);
+		}
+	});
+	interp.detach();
+}
+
+
+void Server::interpret(const std::string& entry) 
+{
+	std::string cmd;
+	std::string arg;
+	std::stringstream ss(entry);
+	ss >> cmd;
+	ss >> arg;
+
+	cmd == "ban" ? ban(arg) : 
+	cmd == "allow" ? allow(arg) :
+	cmd == "show" ? show(arg) :
+	cmd == "kill" ? kill() :
+	cmd == "" ? (void)[](){} : 
+	LOG("invalid command !");
+}
+
+
+void Server::allow(const std::string& _IP)
+{
+	bool hit = false;
+	for(std::vector<std::string>::const_iterator IP = this->IP_banlist.begin(); 
+	    IP != this->IP_banlist.end(); 
+		++IP) {
+    	if (*IP == _IP) {
+			this->IP_banlist.erase(IP);
+			LOG("* IP allowed *");
+			hit = true;
+		}
+
+		if (!hit) LOG("IP already allowed");
+	}
+
+
+	// std::for_each(this->IP_banlist.begin(), this->IP_banlist.end(),
+	// 	[&](std::vector<std::string>::iterator IP){
+	// 	if (IP == _IP) {
+	// 		this->IP_banlist.erase(IP);
+	// 		std::cout << "allowed IP " << _IP;
+	// 	} else {
+	// 		LOG("IP already allowed");
+	// 	}
+	// });
+}
+
+
+void Server::show(const std::string& IP)
+{
+	std::lock_guard<std::mutex> lock(server_lock);
+	std::cout << "-- data log for client [ " << IP << " ] --\n";
+
+	if (client_DB.size() == 0) {
+		std::cout << "* no sessions this runtime *\n";
+	}
 
 	std::for_each(client_DB.begin(), client_DB.end(),
-		[](std::shared_ptr<Client> client) {
-			client->client_end_log();
-		});*/
+		[&](std::shared_ptr<Client> client) {
+			if (IP == client->get_IP()) {
+				client->log_data__();
+			}
+		});
+
+	std::cout << "-- end data log --\n\n";
+}
+
+
+void Server::show(const char* _IP)
+{
+	std::string IP(_IP);
+	std::lock_guard<std::mutex> lock(server_lock);
+	std::cout << "-- data log for client [ " << IP << " ] --\n";
+
+	if (client_DB.size() == 0) {
+		std::cout << "* no sessions this runtime *\n";
+	}
+
+	std::for_each(client_DB.begin(), client_DB.end(),
+		[&](std::shared_ptr<Client> client) {
+			if (IP == client->get_IP()) {
+				client->log_data__();
+			}
+		});
+
+	std::cout << "-- end data log --\n\n";
 }
