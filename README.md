@@ -14,8 +14,7 @@ int main(int argc, char** argv)
     s.go();
 
     /* perform any action while server is running */
-    s.ban_IP("10.0.0.123");
-    // s.ban_IP("127.0.0.1");
+    s.ban("10.0.0.123");
     s.print_IP_banlist();
     s.set_host_IP("10.0.0.175");
 
@@ -29,7 +28,7 @@ int main(int argc, char** argv)
     s.run_for(60);
     s.kill();
 
-    s.print_client_data_log("10.0.0.789");
+    s.show("10.0.0.789");
 
     for (http::Message msg : lr) {
         std::cout << msg;
@@ -40,7 +39,7 @@ int main(int argc, char** argv)
 ```
 
 # to-do/status
-- need generic message container type
+- generic message container type and interp mode in progress
 - thread pool/task queue over individual client thread inits
 - LocalClient methods, seperate application probably
-- need some compile time options
+- started adding compile time options
