@@ -12,21 +12,23 @@ Server::Server(int argc, char** argv)
 	init_server_info();
 	init_thread_pool();
 
+	#ifdef AUTOLOG
+	std::thread logger([this]()->void{while (RUNNING) auto_update_log();});
+	logger.detach();
+	#endif
+
 	LOG("* server ready to go() *");
 }
 
 
 Server::Server(int argv_1, std::string argv_2) : port(argv_1), root(argv_2)
 {
-	init_server_info();
-	init_thread_pool();
-	LOG("* server ready to go() *");
+	// copy over
 }
 
 
 Server::~Server()
 {
-	// dump_client_DB();
 	close(server_socket);
 }
 
@@ -39,13 +41,6 @@ void Server::init_server_info()
 
 	memset(&server_info, 0, sizeof(server_info));
 	server_info.sin_family = AF_INET;
-
-	// if (LOCAL_HOST == 1) {
-	// 	server_info.sin_port = inet_addr("127.0.0.1");
-	// }
-	// else {
-	// 	server_info.sin_addr.s_addr = INADDR_ANY;
-	// }
 
 	#ifdef LOCAL_HOST
 	server_info.sin_port = inet_addr("127.0.0.1");
@@ -111,6 +106,11 @@ bool Server::setup()
 		
 	printf("* server running on port %i *\n\n", this->port);
 	RUNNING = true;
+
+	#ifdef INTERP_MODE
+	std::thread interp([this]()->void{while (RUNNING) interp_loop();});
+	interp.detach();
+	#endif
 
 	return true;
 } 
@@ -236,56 +236,50 @@ void Server::main_accept_loop()
 
 void Server::kill()
 {
-	std::lock_guard<std::mutex> gaurd(server_lock);
-
+	std::unique_lock<std::mutex> gaurd(server_lock);
 	RUNNING = false;
+	
 	close(server_socket);
+	gaurd.unlock();
 	// log_client_DB_to_file
 
-	printf("* killed *\n");
+	LOG("* killed *");
 }
 
 
-void Server::launch_client_DB_logger()
+void Server::auto_update_log()
 {
-	int entries_logged{};
-	auto logger = [&]()
-	{
-		while (RUNNING)
-		{
-			std::lock_guard<std::mutex> guard(server_lock);
-			std::ofstream client_DB_file;
-			client_DB_file.open("client_DB.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+	std::ofstream file;
+	file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::app);
 
-			if (!client_DB_file) {
-				client_DB_file.open("client_DB.txt", std::fstream::in | std::fstream::out | std::fstream::trunc);
-				client_DB_file << "- session client_DB log -\n\n";
-				client_DB_file.close();
-			}
-			else {
-				client_DB_log_printer(client_DB_file, entries_logged);
-				client_DB_file.close();
-			}
+	if (!file) {
+		file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
+	}
 
-			client_DB_file.close();
-			sleep(DEFAULT_LOG_INTERVAL);
-		}
-	};
+	file << "- LOGFILE UPDATE -\n\n";
+	for (int i = this->log_entries; i < this->client_DB.size(); ++i) {
+		// file << this->client_DB[i]->log_data__();
+		file << "client data here!!!\n\n";
+		++this->log_entries;
+	}
 
-	std::thread log_to_file(logger);
-	log_to_file.detach();
+	sleep(DEFAULT_LOG_INTERVAL);
 }
 
 
-void Server::client_DB_log_printer(std::ofstream& file_stream, int& entries_logged)
+void Server::update()
 {
-	std::lock_guard<std::mutex> guard(server_lock);
-	int entries_to_log = client_DB.size() - entries_logged;
+	std::ofstream file;
+	file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::app);
 
+	if (!file) {
+		file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
+	}
 
-
-	for (int i = 0; i < entries_to_log; ++i) {
-		file_stream << client_DB[entries_logged + 1];
+	file << "- LOGFILE UPDATE -\n\n";
+	for (auto client : this->client_DB) {
+		// file << this->client_DB[i]->log_data__();
+		file << "client data here!!!\n\n";
 	}
 }
 
@@ -364,19 +358,21 @@ void Server::send_request(std::string)
 void Server::LOG(const char* msg) noexcept
 {
 	std::lock_guard<std::mutex> gaurd(server_lock);
-	// write(1, msg, strlen(msg));
-	std::cout << "\n\n" << msg << "\n\n";
+	std::cout << "\n" << msg << "\n";
 }
 
 
 void Server::interp_loop()
 {
-	std::thread interp([this]()->void{
-		while (RUNNING) {
-		std::string entry;
-		std::cout << "serv~$ ";
-		std::getline (std::cin, entry);
-		interpret(entry);
+	std::thread interp([this]() -> void {
+		// cin.ignore(std::numeric_limits<std::streamsize>::max())
+		std::cin.clear();
+		while (RUNNING)
+		{
+			std::string entry;
+			std::cout << "serv~$ ";
+			std::getline(std::cin >> entry);
+			interpret(entry);
 		}
 	});
 	interp.detach();
@@ -414,17 +410,6 @@ void Server::allow(const std::string& _IP)
 
 		if (!hit) LOG("IP already allowed");
 	}
-
-
-	// std::for_each(this->IP_banlist.begin(), this->IP_banlist.end(),
-	// 	[&](std::vector<std::string>::iterator IP){
-	// 	if (IP == _IP) {
-	// 		this->IP_banlist.erase(IP);
-	// 		std::cout << "allowed IP " << _IP;
-	// 	} else {
-	// 		LOG("IP already allowed");
-	// 	}
-	// });
 }
 
 

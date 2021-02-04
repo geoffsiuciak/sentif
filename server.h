@@ -20,6 +20,7 @@
 #include <memory>
 #include <thread>
 #include <string>
+#include <limits>
 #include <queue>
 #include <mutex>
 #include <list>
@@ -43,12 +44,13 @@
 #define DEFAULT_INIT_THREAD_COUNT 25
 
 
-/* options */
-#define STDOUT          // enable/disable rolling output
-#define LOCAL_HOST      // denote host addr as "127.0.0.1"
-#define INTERP_MODE     // run with interpreter (disables rolling stdout)
-#define SET_TCP         
+/* config */
+#define LOCAL_HOST   
+#define INTERP_MODE
+#define SET_TCP 
 // #define SET_UDP
+#define AUTOLOG
+#define LOGFILE "server_log.txt"
 
 
 namespace http
@@ -80,8 +82,6 @@ namespace http
 		const std::string& get_host_IP() const { return this->host_IP; }
 		const std::vector<std::string>& return_IP_blacklist() const;
 
-		bool log_client_DB_to_file(int);
-
 		/* interp mode methods */
 		void interp_loop();
 		void interp_LOG(const std::string &);
@@ -89,17 +89,18 @@ namespace http
 		void ban_IP(const std::string &IP);
 
 		void allow(const std::string &);
-		void show(const std::string &);\
+		void show(const std::string &);
 		void show(const char*);
+		void update();
 
 	private:
 		Server(int, std::string);
 		bool setup();
 		void init_server_info();
 		void init_thread_pool();
-		void launch_client_DB_logger();
+		void launch_logger();
+		void auto_update_log();
 		void launch_thread_manager();
-		void client_DB_log_printer(std::ofstream&, int&);
 		bool validate_client(std::shared_ptr<Client>);
 		void main_accept_loop();
 
@@ -112,6 +113,7 @@ namespace http
 		int server_socket{};
 		int request_count{};
 		int active_clients{};
+		int log_entries{};
 		bool CALLED = false;
 		bool SETUP = false;
 		bool RUNNING = false;
