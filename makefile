@@ -3,7 +3,7 @@
 COMP = g++
 FLAGS = -std=c++17 -pthread
 
-all: server.o client.o request.o response.o local_client.o message.o
+all: server.o client.o request.o response.o local_client.o message.o config.h
 	$(COMP) $(FLAGS) main.cpp -o server $^
 
 server.o: server.h server.cpp
