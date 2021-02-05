@@ -39,7 +39,8 @@ int main(int argc, char** argv)
 ```
 
 # to-do/status
-- generic message container type and interp mode in progress
+- debug interp (working though)
+- finish msg container type
 - thread pool/task queue over individual client thread inits
-- LocalClient methods, seperate application probably
+- LocalClient methods (merge with interp syntax)
 - started adding compile time options
