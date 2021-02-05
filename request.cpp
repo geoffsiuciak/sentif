@@ -72,7 +72,7 @@ void Request::log_out()
 std::ostream& operator<<(std::ostream& out, const Request& request)
 {
 	out << "Time: " << request.get_time() << '\n'
-		<< "[ " << request.get_request() << " ]" << "\n\n";
+		<< "-> " << request.get_request() << "\n\n";
 
 	return out;
 }
