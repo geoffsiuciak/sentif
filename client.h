@@ -31,6 +31,7 @@
 #include "http_codes.h"
 #include "request.h"
 #include "response.h"
+#include "config.h"
 
 
 #define BUFFER_SIZE 256
@@ -64,7 +65,7 @@ namespace http
 		void generate_default_response();
 		void generate_unique_response();
 		void generate_error_response(int);
-		void o(const char*);
+		void LOG(const char*);
 
 		std::mutex client_lock;
 		

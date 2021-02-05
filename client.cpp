@@ -47,12 +47,11 @@ bool Client::new_message()
 	try {
 		if (msg_len = read(
 			socket_ID, read_buffer.data(), BUFFER_SIZE - 1) <= 0) 
-			throw std::runtime_error("client quit: ");
+			throw std::runtime_error("\nclient quit!");
 	}
 	catch (const std::runtime_error& e) {
 		client_alive = false;
-		std::lock_guard<std::mutex> gaurd(client_lock);
-		std::cout << e.what() << IP4_address << "\n\n";
+		LOG(e.what());
 		return false;
 	}
 
@@ -62,10 +61,21 @@ bool Client::new_message()
 }
 
 
-void Client::o(const char* out)
+void Client::LOG(const char* out)
 {
+	#ifdef AUTOLOG
 	std::lock_guard<std::mutex> gaurd(client_lock);
 	std::cout << out << '\n';
+	#endif
+}
+
+
+void Client::log_connection()
+{
+	#ifdef AUTOLOG
+	std::lock_guard<std::mutex> gaurd(client_lock);
+	std::cout << "\nnew client: " << IP4_address << '\n';
+	#endif
 }
 
 
@@ -92,7 +102,7 @@ void Client::process_request()
 
 void Client::generate_error_response(int http_code)
 {
-	o("error");
+	LOG("error");
 	session_responses.emplace_back(Response(http_code));
 }
 
@@ -117,7 +127,7 @@ bool Client::read_from_file(int file_fd, char* content_buffer, int* file_size)
 
 void Client::generate_unique_response()
 {
-	o("unique");
+	LOG("unique");
 
 	int file_fd = search();
 	if (file_fd > -1) {
@@ -159,22 +169,18 @@ int Client::get_count()
 
 void Client::deny()
 {
-	int ec{};
-	const char buff[19]{ "CONNECTION DENIED\n" };
-
-	write(socket_ID, (const void*)buff, 19);
+	write(socket_ID, BANNED_IP_MSG, strlen(BANNED_IP_MSG));
 	client_alive = false;
 	close(this->socket_ID);
 
-	std::lock_guard<std::mutex> guard(client_lock);
-	std::cout << "banned IP denied: " << IP4_address << "\n\n";
+	// need general purpose logger based on #define
+	// LOG("banned IP denied: " << IP4_address << "\n\n";
 }
 
 
 int Client::search()
 {
-	char root[23]{"/home/xzxthagod/server"};
-	DIR* root_ptr = opendir(root);
+	DIR* root_ptr = opendir(ROOT);
 	struct dirent* entry = nullptr;
 
 	auto path = session_requests.back().get_path();
@@ -186,7 +192,7 @@ int Client::search()
 		if (entry->d_name == path) {
 			if (entry->d_type == DT_REG) 
 			{
-				std::string full_path = root + '/' + path;
+				std::string full_path = ROOT + '/' + path;
 				const char* c_path = full_path.c_str();
 				target_fd = open(c_path, O_RDONLY, 0644);
 			}
@@ -201,16 +207,9 @@ int Client::search()
 }
 
 
-void Client::log_connection()
-{
-	std::lock_guard<std::mutex> gaurd(client_lock);
-	std::cout << "new client: " << IP4_address << "\n\n";
-}
-
-
 void Client::generate_default_response()
 {
-	o("nice index");
+	LOG("nice index");
 
 	// const char* 
 
@@ -241,17 +240,11 @@ void Client::client_end_log()
 
 void Client::log_data__()
 {
-	/*std::lock_guard<std::mutex> gaurd(client_lock);
-	int i = 
-
 	std::cout << "session start: " << session_start_time << "\n";
+	int len = this->session_requests.size();
 
-	std::for_each(session_requests.begin(),
-		          session_requests.end(),
-		[&]() {
-			std::cout << session_requests[i];
-			std::cout << session_responses[i];
-			++i;
-		}
-	);*/
+	for (int i = 0; i < len; ++i) {
+		std::cout << session_requests[i];
+		std::cout << session_responses[i];
+	}
 }
