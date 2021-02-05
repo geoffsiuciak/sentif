@@ -108,8 +108,7 @@ bool Server::setup()
 	RUNNING = true;
 
 	#ifdef INTERP_MODE
-	std::thread interp([this]()->void{while (RUNNING) interp_loop();});
-	interp.detach();
+	interp_loop();
 	#endif
 
 	return true;
@@ -236,13 +235,8 @@ void Server::main_accept_loop()
 
 void Server::kill()
 {
-	std::unique_lock<std::mutex> gaurd(server_lock);
 	RUNNING = false;
-	
 	close(server_socket);
-	gaurd.unlock();
-	// log_client_DB_to_file
-
 	LOG("* killed *");
 }
 
@@ -326,7 +320,7 @@ void Server::go()
 	if (CALLED && RUNNING)
 	{
 		std::thread main_loop([this]()->void{main_accept_loop();});
-		main_loop.detach();
+		main_loop.join();
 	}
 }
 
@@ -358,78 +352,95 @@ void Server::send_request(std::string)
 void Server::LOG(const char* msg) noexcept
 {
 	std::lock_guard<std::mutex> gaurd(server_lock);
-	std::cout << "\n" << msg << "\n";
+	std::cout << msg << '\n';
 }
 
 
 void Server::interp_loop()
 {
 	std::thread interp([this]() -> void {
-		// cin.ignore(std::numeric_limits<std::streamsize>::max())
-		std::cin.clear();
+		// std::lock_guard<std::mutex> gaurd(this->server_lock);
 		while (RUNNING)
 		{
 			std::string entry;
-			std::cout << "serv~$ ";
-			std::getline(std::cin >> entry);
-			interpret(entry);
+			std::cout << INTERP_PROMPT;
+			std::getline(std::cin, entry);
+			interpret(std::stringstream(entry));
 		}
 	});
 	interp.detach();
 }
 
 
-void Server::interpret(const std::string& entry) 
+void Server::interpret(std::stringstream&& entry) 
 {
 	std::string cmd;
 	std::string arg;
-	std::stringstream ss(entry);
-	ss >> cmd;
-	ss >> arg;
 
-	cmd == "ban" ? ban(arg) : 
-	cmd == "allow" ? allow(arg) :
-	cmd == "show" ? show(arg) :
-	cmd == "kill" ? kill() :
-	cmd == "" ? (void)[](){} : 
-	LOG("invalid command !");
+	entry >> cmd;
+	entry >> arg;
+
+	cmd == "ban"   ? ban(arg)     : 
+	cmd == "allow" ? allow(arg)   :
+	cmd == "show"  ? show(arg)    :
+	cmd == "kill"  ? kill()       :
+	cmd == ""      ? (void)[](){} : 
+	LOG("invalid command!");
 }
 
 
-void Server::allow(const std::string& _IP)
+void Server::allow(const std::string& IP)
 {
 	bool hit = false;
-	for(std::vector<std::string>::const_iterator IP = this->IP_banlist.begin(); 
-	    IP != this->IP_banlist.end(); 
-		++IP) {
-    	if (*IP == _IP) {
-			this->IP_banlist.erase(IP);
+	std::vector<std::string>::iterator i = this->IP_banlist.begin();
+	std::vector<std::string>::iterator end = this->IP_banlist.end();
+
+	for (i; !hit; ) {
+    	if (*i == IP) {
+			this->IP_banlist.erase(i);
 			LOG("* IP allowed *");
 			hit = true;
+		} else { ++i; }
+	} 
+	if (!hit) LOG("IP already allowed");
+}
+
+
+void Server::show(const std::string& arg)
+{
+	if (arg == "banlist") {
+		print_IP_banlist();
+	} 
+	else if (is_IP(arg)) 
+	{
+		std::lock_guard<std::mutex> lock(server_lock);
+		std::cout << "-- data log for client [ " << arg << " ] --\n";
+
+		if (client_DB.size() == 0) {
+			std::cout << "* no sessions this runtime *\n";
 		}
 
-		if (!hit) LOG("IP already allowed");
+		std::for_each(client_DB.begin(), client_DB.end(),
+			[&](std::shared_ptr<Client> client) {
+				if (arg == client->get_IP()) {
+					client->log_data__();
+				}
+			});
+
+		std::cout << "-- end data log --\n\n";
+
+	} else if (arg.size() == 0) {
+		LOG("nothing to show!");
+	} else {
+		LOG("invalid arg!");
 	}
 }
 
 
-void Server::show(const std::string& IP)
+bool Server::is_IP(const std::string& IP)
 {
-	std::lock_guard<std::mutex> lock(server_lock);
-	std::cout << "-- data log for client [ " << IP << " ] --\n";
-
-	if (client_DB.size() == 0) {
-		std::cout << "* no sessions this runtime *\n";
-	}
-
-	std::for_each(client_DB.begin(), client_DB.end(),
-		[&](std::shared_ptr<Client> client) {
-			if (IP == client->get_IP()) {
-				client->log_data__();
-			}
-		});
-
-	std::cout << "-- end data log --\n\n";
+	// build this out
+	return isdigit(IP[0]);
 }
 
 

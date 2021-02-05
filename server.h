@@ -32,25 +32,7 @@
 #include "response.h"
 #include "local_client.h"
 #include "message.h"
-
-
-#define QUEUE_SIZE 100
-#define MAX_CONNECTIONS 100
-#define DEFAULT_PER_MIN 30
-#define DEFAULT_PER_SESSION 100
-#define DEFAULT_HISTORY_SAVED 250
-#define DEFAULT_CLIENTS_SAVED 500
-#define DEFAULT_LOG_INTERVAL 30
-#define DEFAULT_INIT_THREAD_COUNT 25
-
-
-/* config */
-#define LOCAL_HOST   
-#define INTERP_MODE
-#define SET_TCP 
-// #define SET_UDP
-#define AUTOLOG
-#define LOGFILE "server_log.txt"
+#include "config.h"
 
 
 namespace http
@@ -85,13 +67,14 @@ namespace http
 		/* interp mode methods */
 		void interp_loop();
 		void interp_LOG(const std::string &);
-		void interpret(const std::string &);
+		void interpret(std::stringstream&&);
 		void ban_IP(const std::string &IP);
 
 		void allow(const std::string &);
 		void show(const std::string &);
 		void show(const char*);
 		void update();
+		bool is_IP(const std::string &);
 
 	private:
 		Server(int, std::string);
