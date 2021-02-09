@@ -86,23 +86,24 @@ void Client::process_request()
 	if (curr_req.get_method() == "GET" && 
 	    curr_req.get_path() == "/" && 
 		curr_req.clean()) { 
-			generate_default_response(); 
+			homepage_response(); 
 	} 
 	else if (curr_req.get_method() == "GET" && 
 	         curr_req.get_path()[0] == '/' &&
 			 curr_req.get_path().size() > 1 && 
 			 curr_req.clean()) { 
-			 	generate_unique_response();
+			 	unique_response();
 	}
 	else {
-		generate_error_response(BAD_REQUEST);
+		error_response(BAD_REQUEST);
 	}
 }
 
 
-void Client::generate_error_response(int http_code)
+void Client::error_response(int http_code)
 {
 	LOG("error");
+	unique_response()
 	session_responses.emplace_back(Response(http_code));
 }
 
@@ -125,7 +126,26 @@ bool Client::read_from_file(int file_fd, char* content_buffer, int* file_size)
 }
 
 
-void Client::generate_unique_response()
+void Client::homepage_response()
+{
+	LOG("nice index");
+	std::string home = std::string(ROOT) + std::string(HOMEPAGE);
+	const char *home_c = home.c_str();
+	int fd = open(home_c, O_RDONLY, 0);
+	char buffer[10];
+	int bytes_read = 1;
+
+	while (bytes_read > 0)
+	{
+		bytes_read = read(fd, buffer, 10);
+		write(this->socket_ID, buffer, bytes_read);
+	}
+
+	session_responses.emplace_back(Response(OK, "index.html"));
+}
+
+
+void Client::unique_response()
 {
 	LOG("unique");
 
@@ -142,16 +162,12 @@ void Client::generate_unique_response()
 		}
 
 		session_responses.emplace_back(Response(OK));
-		/* else { generate_error_response(INTERNAL_SERVER_ERROR); }
+		/* else { error_response(INTERNAL_SERVER_ERROR); }
 		   need to come back for sys call error handling
 		*/
-
-		close(file_fd);
 	}
-	else { 
-		close(file_fd);
-		generate_error_response(NOT_FOUND);
-	}
+	else { error_response(NOT_FOUND); }
+	close(file_fd);
 }
 
 
@@ -173,7 +189,7 @@ void Client::deny()
 	client_alive = false;
 	close(this->socket_ID);
 
-	// need general purpose logger based on #define
+	// need general purpose logger based on #define AUTOLOG
 	// LOG("banned IP denied: " << IP4_address << "\n\n";
 }
 
@@ -204,17 +220,6 @@ int Client::search()
 
 	std::cout << target_fd << '\n';
 	return target_fd;
-}
-
-
-void Client::generate_default_response()
-{
-	LOG("nice index");
-
-	// const char* 
-
-	// read_from_file("index.html");
-	session_responses.emplace_back(Response(OK, "index.html"));
 }
 
 

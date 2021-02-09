@@ -62,9 +62,9 @@ namespace http
 		bool write_to_client(int, char *, int);
 
 	private:
-		void generate_default_response();
-		void generate_unique_response();
-		void generate_error_response(int);
+		void homepage_response();
+		void unique_response();
+		void error_response(int);
 		void LOG(const char*);
 
 		std::mutex client_lock;
