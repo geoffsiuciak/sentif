@@ -12,15 +12,16 @@
 #define DEFAULT_INIT_THREAD_COUNT 25
 
 #define LOCAL_HOST   
-#define INTERP_MODE
+// #define INTERP_MODE
 #define SET_TCP 
 // #define SET_UDP
 #define AUTOLOG
 #define LOGFILE "server_log.txt"
+#define HOMEPAGE "index.html"
 #define ROOT "/home/xzxthagod/server"
 
 #define INTERP_PROMPT "serv~$ "
 #define BANNED_IP_MSG "u are banned lol\n"
 
 
-#endif // CONFIG_H
+#endif /* CONFIG_H */
