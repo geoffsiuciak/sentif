@@ -63,7 +63,7 @@ bool Client::new_message()
 
 void Client::LOG(const char* out)
 {
-	#ifdef AUTOLOG
+	#if TERMINAL_OUT
 	std::lock_guard<std::mutex> gaurd(client_lock);
 	std::cout << out << '\n';
 	#endif
@@ -72,7 +72,7 @@ void Client::LOG(const char* out)
 
 void Client::log_connection()
 {
-	#ifdef AUTOLOG
+	#if TERMINAL_OUT
 	std::lock_guard<std::mutex> gaurd(client_lock);
 	std::cout << "\nnew client: " << IP4_address << '\n';
 	#endif
@@ -103,7 +103,7 @@ void Client::process_request()
 void Client::error_response(int http_code)
 {
 	LOG("error");
-	unique_response()
+	unique_response();
 	session_responses.emplace_back(Response(http_code));
 }
 
