@@ -1,7 +1,7 @@
 # http_server makefile
 
 COMP = g++
-FLAGS = -std=c++17 -pthread -O3
+FLAGS = -std=c++17 -pthread -Wundef -O3
 
 all: server.o client.o request.o response.o local_client.o message.o config.h
 	$(COMP) $(FLAGS) main.cpp -o server $^
