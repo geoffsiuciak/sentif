@@ -1,8 +1,21 @@
 # http_server
-C++ classes for quickly implementing a multithreaded HTTP/\*nix socket server
-```
-// basic usage
+C++ library for quickly implementing a multithreaded HTTP/\*nix socket server
 
+# Features
+- Supports TCP and UDP protocols 
+- Maintains client history for the lifetime of the program, which may be periodically logged out
+- 2 runtime modes 
+    - Default: While in scope, any code or method may be run or called on the server object
+    - Interp: Shell-style interpreter which supports the same core commands:
+        - ban - add an IPv4 address to the banlist
+        - allow - remove an IPv4 address to the banlist
+        - show - show logged data from any client in the history, or show banlist
+        - kill - kills server, but does not exit main()
+- Edit config.h to define desired behavior
+
+
+Basic usage:
+```
 #include <iostream>
 #include "server.h"
 
@@ -30,7 +43,7 @@ int main(int argc, char** argv)
 
     s.show("10.0.0.789");
 
-    for (http::Message msg : lr) {
+    for (auto msg : lr) {
         std::cout << msg;
     }
 
@@ -38,9 +51,8 @@ int main(int argc, char** argv)
 }
 ```
 
-# to-do/status
-- debug interp (working though)
+# To-do/status
+- threading model still needs work
 - finish msg container type
 - thread pool/task queue over individual client thread inits
 - LocalClient methods (merge with interp syntax)
-- started adding compile time options
