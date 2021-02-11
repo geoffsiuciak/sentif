@@ -38,7 +38,6 @@
 namespace http
 {
 	void bail(const char*);
-	bool valid(const int, const char**);
 
 	class Server
 	{
@@ -115,4 +114,4 @@ namespace http
 }
 
 
-#endif
+#endif /* SERVER_H */

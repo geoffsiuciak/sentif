@@ -12,9 +12,8 @@ Server::Server(int argc, char** argv)
 	init_server_info();
 	init_thread_pool();
 
-	#ifdef AUTOLOG
-	std::thread logger([this]()->void{while (RUNNING) auto_update_log();});
-	logger.detach();
+	#if AUTOLOG
+	auto_update_log();
 	#endif
 
 	LOG("* server ready to go() *");
@@ -42,11 +41,9 @@ void Server::init_server_info()
 	memset(&server_info, 0, sizeof(server_info));
 	server_info.sin_family = AF_INET;
 
-	#ifdef LOCAL_HOST
-	server_info.sin_port = inet_addr("127.0.0.1");
-	#elif 
+	LOCAL_HOST ? 
+	server_info.sin_port = inet_addr("127.0.0.1") :
 	server_info.sin_addr.s_addr = INADDR_ANY;
-	#endif
 
 	server_info.sin_port = htons(port);
 	CALLED = true;
@@ -107,7 +104,7 @@ bool Server::setup()
 	printf("* server running on port %i *\n\n", this->port);
 	RUNNING = true;
 
-	#ifdef INTERP_MODE
+	#if INTERP_MODE
 	interp_loop();
 	#endif
 
@@ -124,7 +121,10 @@ bool Server::connections_allowed() const
 void Server::ban(const char* ip_to_ban)
 {
 	this->IP_banlist.emplace_back(std::string(ip_to_ban));
+
+	#if TERMINAL_OUT
 	std::cout << "BANNED IP: " << IP_banlist.back() << "\n\n";
+	#endif
 }
 
 
@@ -243,21 +243,26 @@ void Server::kill()
 
 void Server::auto_update_log()
 {
-	std::ofstream file;
-	file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::app);
+	std::thread logger([this]() {
+		std::ofstream file;
+		file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::app);
 
-	if (!file) {
-		file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
-	}
+		if (!file)
+		{
+			file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
+		}
 
-	file << "- LOGFILE UPDATE -\n\n";
-	for (int i = this->log_entries; i < this->client_DB.size(); ++i) {
-		// file << this->client_DB[i]->log_data__();
-		file << "client data here!!!\n\n";
-		++this->log_entries;
-	}
+		file << "- LOGFILE UPDATE -\n\n";
+		for (int i = this->log_entries; i < this->client_DB.size(); ++i)
+		{
+			// file << this->client_DB[i]->log_data__();
+			file << "client data here!!!\n\n";
+			++this->log_entries;
+		}
 
-	sleep(DEFAULT_LOG_INTERVAL);
+		sleep(DEFAULT_LOG_INTERVAL);
+	});
+	logger.detach();
 }
 
 
@@ -292,18 +297,6 @@ bool Server::validate_client(std::shared_ptr<Client> client_ptr)
 	);
 
 	return client_allowed;
-}
-
-
-bool http::valid(const int argc, const char** argv) 
-{
-	if (argc != 3) 
-		bail("invalid argc");
-
-	/*if (atoi(argv[1]) <= 1024) 
-		bail("invalid port");*/
-
-	return true;
 }
 
 
