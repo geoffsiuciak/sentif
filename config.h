@@ -3,9 +3,9 @@
 
 
 #define LOCAL_HOST 1      // explicitly set host IP to 127.0.0.1 
-#define INTERP_MODE 0     // run in interpreter mode - shell and command behavior
+#define INTERP_MODE 1     // run in interpreter mode - shell and command behavior
 #define AUTOLOG 0         // periodically auto log client db out to file
-#define TERMINAL_OUT 1    // dump msgs to stdout as requests are recieved and filled
+#define TERMINAL_OUT 0    // dump msgs to stdout as requests are recieved and filled
 #define SET_TCP 1     
 #define SET_UDP 0
 #define LOGFILE "server_log.txt"
