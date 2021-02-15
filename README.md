@@ -8,7 +8,7 @@ C++ library for quickly implementing a multithreaded HTTP/\*nix socket server
     - Default: While in scope, any code or method may be run or called on the server object
     - Interp: Shell-style interpreter which supports the same core commands:
         - ban - add an IPv4 address to the banlist
-        - allow - remove an IPv4 address to the banlist
+        - allow - remove an IPv4 address from the banlist
         - show - show logged data from any client in the history, or show banlist
         - kill - kills server, but does not exit main()
 - Edit config.h to define desired behavior
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
     lr.push_back(lcl.GET("index.html"));
     lr.push_back(lcl.GET("this_page.html"));
-    lr.push_back(lcl.GET("anothers.html"));
+    lr.push_back(lcl.GET("another.html"));
 
     s.run_for(60);
     s.kill();
