@@ -407,7 +407,7 @@ void Server::show(const std::string& arg)
 	else if (is_IP(arg)) 
 	{
 		std::lock_guard<std::mutex> lock(server_lock);
-		std::cout << "-- data log for client [ " << arg << " ] --\n";
+		std::cout << "\n-- data log for client [ " << arg << " ] --\n";
 
 		if (client_DB.size() == 0) {
 			std::cout << "* no sessions this runtime *\n";
