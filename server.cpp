@@ -50,31 +50,6 @@ void Server::init_server_info()
 }
 
 
-void Server::init_thread_pool()
-{
-	/*for (int i = 0; i < __DEFAULT_INIT_THREAD_COUNT; ++i)
-	{
-		thread_queue.emplace(new std::thread);
-	}*/
-}
-
-
-void Server::launch_thread_manager()
-{
-	init_thread_pool();
-
-	std::thread thread_manager(
-		[&](){
-			while (RUNNING)
-			{
-
-			}
-		}
-	);
-	
-}
-
-
 bool Server::setup()
 {
 	socklen_t server_len = sizeof(server_info);
@@ -202,34 +177,75 @@ bool Server::is_client_allowed(const std::string& client_IP)
 
 void Server::main_accept_loop()
 {
-	int client_socket{};
+    int ID{};
+    int client_socket{};
 	sockaddr_in client_info{};
 	auto* client_info_ptr = (sockaddr*)&client_info;
 	socklen_t client_size = sizeof(client_info);
 	
-	while ((client_socket = accept(server_socket,
-		                           client_info_ptr,
-		                           &client_size)) != -1
-		&& connections_allowed())
-	{
-		std::thread client_thread([=]()->void
-			{
-				std::shared_ptr<Client> client_ptr =
-					std::make_shared<Client>(client_socket, client_info);
+	while ((client_socket = 
+        accept(server_socket, client_info_ptr, &client_size)) != -1) 
+    {
+        std::thread request_thread([=]()->void 
+        {
+            Request request(std::move(client_info.sin_addr), ++ID);
+            std::string IP = request.get_client();
 
-				if (validate_client(client_ptr)) {
-					std::unique_lock<std::mutex> db_guard(server_lock);
-					client_DB.push_back(client_ptr);
-					db_guard.unlock();
+            if (!validate_client(IP)) { deny(IP); }
+            else {
+                const int msg_len = 0;
+                char buffer[BUFFER_SIZE];
 
-					std::shared_ptr<Client> RUN_client_ptr = client_ptr;
-					RUN_client_ptr->main_loop();
-				}
-				else { client_ptr->deny(); }
-			}
-		);
-		client_thread.detach();
-	}
+                if (msg_len = read(socket_ID, buffer, BUFFER_SIZE - 1) < 0) {
+                    // read error
+                } else {
+                    buffer[msg_len + 1] = '\0';
+                    request.set_request(buffer);
+                    this->request_DB.push_back(std::move(request));
+                }
+
+                // write();
+            }
+        });
+        request_thread.detach();
+    }
+}
+
+
+void Server::log_request(request& req)
+{
+    std::unique_lock<std::mutex> db_guard(server_lock);
+    request_DB.push_back(std::move(req));
+    db_guard.unlock();
+}
+
+
+void Server::deny(Request req)
+{
+	write(req.get_client(), BANNED_IP_MSG, strlen(BANNED_IP_MSG));
+	close(req.get_client());
+ 
+    /* 
+    Request err_req;
+    std::unique_lock<std::mutex> db_guard(server_lock);
+    request_DB.push_back(std::move(request));
+    db_guard.unlock();
+    */
+}
+
+
+void Server::request_handler()
+{
+    Request req;
+    if (validate_client(req)) {
+        std::unique_lock<std::mutex> db_guard(server_lock);
+        client_DB.push_back(client_ptr);
+        db_guard.unlock();
+
+        std::shared_ptr<Client> RUN_client_ptr = client_ptr;
+        RUN_client_ptr->main_loop();
+    }
+    else { client_ptr->deny(); }
 }
 
 
@@ -456,3 +472,29 @@ void Server::show(const char* _IP)
 
 	std::cout << "-- end data log --\n\n";
 }
+
+
+void Server::init_thread_pool()
+{
+	/*for (int i = 0; i < __DEFAULT_INIT_THREAD_COUNT; ++i)
+	{
+		thread_queue.emplace(new std::thread);
+	}*/
+}
+
+
+void Server::launch_thread_manager()
+{
+	init_thread_pool();
+
+	std::thread thread_manager(
+		[&](){
+			while (RUNNING)
+			{
+
+			}
+		}
+	);
+	
+}
+

@@ -109,7 +109,8 @@ namespace http
 		std::vector<std::string> IP_whitelist;
 		std::vector<std::string> IP_banlist;
 		std::vector<std::shared_ptr<Client>> client_DB;
-	};
+        std::vector<Request> request_DB;
+    };
 
 }
 
