@@ -2,16 +2,9 @@
 C++ library for quickly implementing a multithreaded HTTP/\*nix socket server
 
 # Features
-- Supports TCP and UDP protocols 
-- Maintains client history for the lifetime of the program, which may be periodically logged out
-- 2 runtime modes 
-    - Default: While in scope, any code or method may be run or called on the server object
-    - Interp: Shell-style interpreter which supports the same core commands:
-        - ban - add an IPv4 address to the banlist
-        - allow - remove an IPv4 address from the banlist
-        - show - show logged data from any client in the history, or show banlist
-        - kill - kills server, but does not exit main()
-- Edit config.h to define desired behavior
+- TCP and UDP support 
+- Maintain client history for the lifetime of the program, log out
+- 2 runtime modes: default and interpreter
 
 
 Basic usage:
@@ -50,9 +43,3 @@ int main(int argc, char** argv)
     return 0;
 }
 ```
-
-# To-do/status
-- threading model still needs work
-- finish msg container type
-- thread pool/task queue over individual client thread inits
-- LocalClient methods (merge with interp syntax)
