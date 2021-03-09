@@ -22,23 +22,25 @@ class Request
 
 public:
 	Request(const char*);
-	std::string init_time();
-	const std::string& get_request() const;
+    std::string init_time();
+    const std::string& get_client() const;
+    const std::string& get_request() const;
 	const std::string& get_method() const;
 	const std::string& get_path() const;
 	const std::string& get_time() const;
 	bool clean() const;
 
-	void log_file();
+    void set_request(char);
+
+    void log_file();
 	void log_out();
 
 private:
-	std::string buffer_string{};
-	std::string method{};
+    int ID;
+    std::string IP4_address;
+    std::string method{};
 	std::string path{};
 	std::string time{};
-	int length{};
-	// std::mutex request_lock;
 };
 
 

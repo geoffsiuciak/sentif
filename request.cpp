@@ -1,26 +1,31 @@
 #include "request.h"
 
 
-Request::Request(const char* buffer)
+Request::Request(addr_in IP_address, int ID)
 {
-	this->buffer_string = std::string(buffer);
-	this->time = init_time();
-
-	std::stringstream ss(buffer_string);
-	ss >> method;
-	ss >> path;
+    this->ID = ID;
+    this->time = init_time();
+    IP4_address = std::string(inet_ntoa(IP_address));
 }
 
 
 std::string Request::init_time()
 {
-	return "00:00 date";
+	this->time = "00:00 date";
 }
 
 
 const std::string& Request::get_request() const
 {
 	return buffer_string;
+}
+
+
+void Request::set_request(char buffer[])
+{
+    std::stringstream ss(buffer);
+	ss >> method;
+	ss >> path;
 }
 
 
