@@ -4,13 +4,23 @@
 using namespace http;
 
 
-Server::Server(int argc, char** argv)
+Server::Server(char** argv)
 {
-	this->port = atoi(argv[1]);
-	this->root = std::string(argv[2]);
+    if (opendir(ROOT) == 0) {
+		bail("bad root directory");
+	}
 
-	init_server_info();
-	init_thread_pool();
+    this->port = atoi(argv[1]);
+	memset(&server_info, 0, sizeof(server_info));
+	server_info.sin_family = AF_INET;
+
+	if (LOCAL_HOST) {
+        server_info.sin_port = inet_addr("127.0.0.1");
+    } else {
+        server_info.sin_addr.s_addr = INADDR_ANY;
+    }
+        
+	server_info.sin_port = htons(port);
 
 	#if AUTOLOG
 	auto_update_log();
@@ -20,33 +30,9 @@ Server::Server(int argc, char** argv)
 }
 
 
-Server::Server(int argv_1, std::string argv_2) : port(argv_1), root(argv_2)
-{
-	// copy over
-}
-
-
 Server::~Server()
 {
 	close(server_socket);
-}
-
-
-void Server::init_server_info()
-{
-	if (opendir(root.c_str()) == 0) {
-		bail("bad root directory");
-	}
-
-	memset(&server_info, 0, sizeof(server_info));
-	server_info.sin_family = AF_INET;
-
-	LOCAL_HOST ? 
-	server_info.sin_port = inet_addr("127.0.0.1") :
-	server_info.sin_addr.s_addr = INADDR_ANY;
-
-	server_info.sin_port = htons(port);
-	CALLED = true;
 }
 
 
@@ -188,64 +174,81 @@ void Server::main_accept_loop()
     {
         std::thread request_thread([=]()->void 
         {
-            Request request(std::move(client_info.sin_addr), ++ID);
+            Request request(client_info.sin_addr, ID);
             std::string IP = request.get_client();
 
             if (!validate_client(IP)) { deny(IP); }
             else {
-                const int msg_len = 0;
+                int msg_len = 0;
                 char buffer[BUFFER_SIZE];
 
-                if (msg_len = read(socket_ID, buffer, BUFFER_SIZE - 1) < 0) {
+                if (msg_len = read(client_socket, buffer, BUFFER_SIZE - 1) < 0) {
                     // read error
                 } else {
                     buffer[msg_len + 1] = '\0';
                     request.set_request(buffer);
+                    serve(request, client_socket);
                     this->request_DB.push_back(std::move(request));
                 }
-
-                // write();
             }
+            close(client_socket);
         });
         request_thread.detach();
+        ++ID;
     }
 }
 
 
-void Server::log_request(request& req)
+void Server::serve(const Request& request, int client_socket)
 {
-    std::unique_lock<std::mutex> db_guard(server_lock);
-    request_DB.push_back(std::move(req));
-    db_guard.unlock();
+    if (request.get_method() == "GET")
+    {
+        int file_fd = search(request.get_path());
+        if (file_fd != -1) {
+
+            int bytes_read = 1;
+            char buffer[10];
+
+            while (bytes_read > 0)
+            {
+                bytes_read = read(file_fd, buffer, 10);
+                write(client_socket, buffer, bytes_read);
+            }
+        }
+        close(file_fd);
+    }    
 }
 
 
-void Server::deny(Request req)
+int Server::search(const std::string& path)
 {
-	write(req.get_client(), BANNED_IP_MSG, strlen(BANNED_IP_MSG));
-	close(req.get_client());
- 
-    /* 
-    Request err_req;
-    std::unique_lock<std::mutex> db_guard(server_lock);
-    request_DB.push_back(std::move(request));
-    db_guard.unlock();
-    */
+	DIR* root_ptr = opendir(ROOT);
+	struct dirent* entry = nullptr;
+	int target_fd = 0;
+
+	while ((entry = readdir(root_ptr)) != NULL && target_fd == 0) 
+	{
+		if (entry->d_name == path) {
+			if (entry->d_type == DT_REG) 
+			{
+				std::string full_path = ROOT + '/' + path;
+				const char* c_path = full_path.c_str();
+				target_fd = open(c_path, O_RDONLY, 0644);
+			}
+			else if (entry->d_type == DT_DIR) {
+				target_fd = -2;  // flag for now
+			}
+		}
+	}
+	
+	// std::cout << target_fd << '\n';
+	return target_fd;
 }
 
 
-void Server::request_handler()
+void Server::deny(const std::string& IP)
 {
-    Request req;
-    if (validate_client(req)) {
-        std::unique_lock<std::mutex> db_guard(server_lock);
-        client_DB.push_back(client_ptr);
-        db_guard.unlock();
-
-        std::shared_ptr<Client> RUN_client_ptr = client_ptr;
-        RUN_client_ptr->main_loop();
-    }
-    else { client_ptr->deny(); }
+    // return page or just text?
 }
 
 
@@ -299,20 +302,15 @@ void Server::update()
 }
 
 
-bool Server::validate_client(std::shared_ptr<Client> client_ptr)
+bool Server::validate_client(const std::string& IP)
 {
-	bool client_allowed = true;
-	std::for_each(IP_banlist.begin(), IP_banlist.end(),
-		[&](std::string& banned_IP) {
-			if (banned_IP == client_ptr->get_IP()) {
-				std::lock_guard<std::mutex> gaurd(server_lock);
-				client_allowed = false;
-				++active_clients;
-			}
-		}
-	);
+	for (auto ip : this->IP_banlist) {
+        if (ip == IP) {
+            return false;
+        }
+    }
 
-	return client_allowed;
+    return true;
 }
 
 
@@ -326,7 +324,7 @@ void http::bail(const char* err_msg)
 void Server::go()
 {
 	setup();
-	if (CALLED && RUNNING)
+	if (RUNNING)
 	{
 		std::thread main_loop([this]()->void{main_accept_loop();});
 		main_loop.join();
@@ -472,29 +470,3 @@ void Server::show(const char* _IP)
 
 	std::cout << "-- end data log --\n\n";
 }
-
-
-void Server::init_thread_pool()
-{
-	/*for (int i = 0; i < __DEFAULT_INIT_THREAD_COUNT; ++i)
-	{
-		thread_queue.emplace(new std::thread);
-	}*/
-}
-
-
-void Server::launch_thread_manager()
-{
-	init_thread_pool();
-
-	std::thread thread_manager(
-		[&](){
-			while (RUNNING)
-			{
-
-			}
-		}
-	);
-	
-}
-
