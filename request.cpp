@@ -1,7 +1,7 @@
 #include "request.h"
 
 
-Request::Request(addr_in IP_address, int ID)
+Request::Request(const in_addr IP_address, int ID)
 {
     this->ID = ID;
     this->time = init_time();
@@ -21,11 +21,13 @@ const std::string& Request::get_request() const
 }
 
 
-void Request::set_request(char buffer[])
+void Request::set_request(char* buffer)
 {
     std::stringstream ss(buffer);
 	ss >> method;
 	ss >> path;
+
+    this->path.erase(0, 1);
 }
 
 

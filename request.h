@@ -21,7 +21,7 @@ class Request
 	friend std::ostream& operator<<(std::ostream&, const Request&);
 
 public:
-	Request(const char*);
+	Request(const in_addr IP_address, int ID);
     std::string init_time();
     const std::string& get_client() const;
     const std::string& get_request() const;
@@ -30,7 +30,7 @@ public:
 	const std::string& get_time() const;
 	bool clean() const;
 
-    void set_request(char);
+    void set_request(char*);
 
     void log_file();
 	void log_out();
