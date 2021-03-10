@@ -7,4 +7,4 @@ done
 make clean
 make all
 
-sudo ./server 80 $(pwd)
+sudo ./server 80
