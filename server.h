@@ -42,7 +42,7 @@ namespace http
 	class Server
 	{
 	public:
-		Server(int, char**);
+		Server(char**);
 		~Server();
 		
 		void go();
@@ -63,7 +63,9 @@ namespace http
 		const std::string& get_host_IP() const { return this->host_IP; }
 		const std::vector<std::string>& return_IP_blacklist() const;
 
-		/* interp mode methods */
+        void deny(const std::string&);
+
+        /* interp mode methods */
 		void interp_loop();
 		void interp_LOG(const std::string &);
 		void interpret(std::stringstream&&);
@@ -76,26 +78,23 @@ namespace http
 		bool is_IP(const std::string &);
 
 	private:
-		Server(int, std::string);
 		bool setup();
 		void init_server_info();
 		void init_thread_pool();
 		void launch_logger();
 		void auto_update_log();
 		void launch_thread_manager();
-		bool validate_client(std::shared_ptr<Client>);
+		bool validate_client(const std::string&);
 		void main_accept_loop();
+        void serve(const Request &, int);
+        int search(const std::string&);
 
-
-	private:
+    private:
 		int port;
-		std::string root;
 		std::string host_IP;
 
-		int server_socket{};
-		int request_count{};
-		int active_clients{};
-		int log_entries{};
+        int active_clients{};
+        int server_socket{};
 		bool CALLED = false;
 		bool SETUP = false;
 		bool RUNNING = false;
@@ -105,10 +104,8 @@ namespace http
 		std::mutex server_lock;
 		std::condition_variable cond_var;
 
-		std::queue<std::thread> thread_queue;
 		std::vector<std::string> IP_whitelist;
 		std::vector<std::string> IP_banlist;
-		std::vector<std::shared_ptr<Client>> client_DB;
         std::vector<Request> request_DB;
     };
 
