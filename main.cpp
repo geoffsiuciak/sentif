@@ -5,8 +5,8 @@
 
 int main(int argc, char** argv)
 {
-	http::Server s(argc, argv);
-	s.go();
+    http::Server s(argv);
+    s.go();
 	
 	// /* perform any action while server is running */
 	/*
@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
 	lr.push_back(lcl.GET("index.html"));
 	lr.push_back(lcl.GET("this_page.html"));
-	lr.push_back(lcl.GET("anothers.html"));
+	lr.push_back(lcl.GET("another.html"));
 	
 	s.run_for(60);
     s.kill();
