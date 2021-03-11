@@ -114,13 +114,10 @@ const std::vector<std::string>& Server::return_IP_blacklist() const
 void Server::print_IP_banlist() const
 {
 	std::cout << "IP BAN LIST:\n";
-	std::for_each(IP_banlist.begin(), IP_banlist.end(),
-		[&](std::string IP) {
-			std::cout << IP << '\n';
-		}
-	);
-	
-	printf("\n");
+	for (auto ip : this->IP_banlist) {
+        std::cout << ip << '\n';
+    }
+    std::cout << "\n\n";
 }
 
 
@@ -133,14 +130,13 @@ void Server::set_host_IP(const char* host)
 bool Server::is_client_allowed(const char* client_IP)
 {
 	bool allowed = true;
-	std::string this_client(client_IP);
-	std::lock_guard<std::mutex> lock(server_lock);
+	std::string IP(client_IP);
+    std::lock_guard<std::mutex> lock(server_lock);
 
-	std::for_each(IP_banlist.begin(), IP_banlist.end(),
-		[&](const std::string& banned_IP) {
-			if (this_client == banned_IP)
-				allowed = false;
-		});
+	for (auto ip : this->IP_banlist) {
+        if (ip == IP)
+            allowed = false;
+    }
 
 	return allowed;
 }
@@ -151,11 +147,10 @@ bool Server::is_client_allowed(const std::string& client_IP)
 	bool allowed = true;
 	std::lock_guard<std::mutex> lock(server_lock);
 
-	std::for_each(IP_banlist.begin(), IP_banlist.end(),
-		[&](const std::string& banned_IP) {
-			if (client_IP == banned_IP)
-				allowed = false;
-		});
+	for (auto ip : this->IP_banlist) {
+        if (ip == client_IP)
+            allowed = false;
+    }
 
 	return allowed;
 }
@@ -262,26 +257,7 @@ void Server::kill()
 
 void Server::auto_update_log()
 {
-	std::thread logger([this]() {
-		std::ofstream file;
-		file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::app);
-
-		if (!file)
-		{
-			file.open(LOGFILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
-		}
-
-		file << "- LOGFILE UPDATE -\n\n";
-		for (int i = this->log_entries; i < this->client_DB.size(); ++i)
-		{
-			// file << this->client_DB[i]->log_data__();
-			file << "client data here!!!\n\n";
-			++this->log_entries;
-		}
-
-		sleep(DEFAULT_LOG_INTERVAL);
-	});
-	logger.detach();
+	// rework
 }
 
 
@@ -295,10 +271,9 @@ void Server::update()
 	}
 
 	file << "- LOGFILE UPDATE -\n\n";
-	for (auto client : this->client_DB) {
-		// file << this->client_DB[i]->log_data__();
-		file << "client data here!!!\n\n";
-	}
+	for (auto req : this->request_DB) {
+        file << req;
+    }
 }
 
 
@@ -418,21 +393,19 @@ void Server::show(const std::string& arg)
 	if (arg == "banlist") {
 		print_IP_banlist();
 	} 
-	else if (is_IP(arg)) 
+	else if (isdigit(arg[0])) 
 	{
 		std::lock_guard<std::mutex> lock(server_lock);
 		std::cout << "\n-- data log for client [ " << arg << " ] --\n";
 
-		if (client_DB.size() == 0) {
-			std::cout << "* no sessions this runtime *\n";
+		if (request_DB.size() == 0) {
+			std::cout << "* no connections this runtime *\n";
 		}
 
-		std::for_each(client_DB.begin(), client_DB.end(),
-			[&](std::shared_ptr<Client> client) {
-				if (arg == client->get_IP()) {
-					client->log_data__();
-				}
-			});
+        for (auto req : request_DB) {
+            if (arg == req.get_client())
+                std::cout << req;
+        }
 
 		std::cout << "-- end data log --\n\n";
 
@@ -444,29 +417,20 @@ void Server::show(const std::string& arg)
 }
 
 
-bool Server::is_IP(const std::string& IP)
-{
-	// build this out
-	return isdigit(IP[0]);
-}
-
-
 void Server::show(const char* _IP)
 {
 	std::string IP(_IP);
 	std::lock_guard<std::mutex> lock(server_lock);
 	std::cout << "-- data log for client [ " << IP << " ] --\n";
 
-	if (client_DB.size() == 0) {
+	if (request_DB.size() == 0) {
 		std::cout << "* no sessions this runtime *\n";
 	}
 
-	std::for_each(client_DB.begin(), client_DB.end(),
-		[&](std::shared_ptr<Client> client) {
-			if (IP == client->get_IP()) {
-				client->log_data__();
-			}
-		});
+	for (auto req : request_DB) {
+            if (IP == req.get_client())
+                std::cout << req;
+        }
 
 	std::cout << "-- end data log --\n\n";
 }
