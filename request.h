@@ -8,12 +8,14 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iomanip>
 #include <ostream>
 #include <sstream>
 #include <string>
-#include <mutex>
 #include <vector>
-
+#include <mutex>
+#include <chrono>
+#include <ctime>
 
 
 class Request 
@@ -22,25 +24,24 @@ class Request
 
 public:
 	Request(const in_addr IP_address, int ID);
-    std::string init_time();
+    const int& get_ID() const {return this->ID;}
     const std::string& get_client() const;
-    const std::string& get_request() const;
 	const std::string& get_method() const;
 	const std::string& get_path() const;
 	const std::string& get_time() const;
-	bool clean() const;
-
     void set_request(char*);
 
-    void log_file();
+    bool clean() const;
 	void log_out();
 
 private:
     int ID;
+    std::string time;
     std::string IP4_address;
+
     std::string method{};
 	std::string path{};
-	std::string time{};
+	
 };
 
 

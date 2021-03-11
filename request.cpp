@@ -4,20 +4,15 @@
 Request::Request(const in_addr IP_address, int ID)
 {
     this->ID = ID;
-    this->time = init_time();
-    IP4_address = std::string(inet_ntoa(IP_address));
-}
+    // this->time = std::string(std::chrono::system_clock::now());
+    this->IP4_address = std::string(inet_ntoa(IP_address));
 
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
-std::string Request::init_time()
-{
-	this->time = "00:00 date";
-}
-
-
-const std::string& Request::get_request() const
-{
-	return buffer_string;
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
+    this->time = ss.str();
 }
 
 
@@ -60,26 +55,23 @@ bool Request::clean() const
 }
 
 
-void Request::log_file()
-{
-	printf("logging to file\n");
-}
-
-
 void Request::log_out()
 {
-	// std::lock_guard<std::mutex> gaurd(request_lock);
-	std::cout << "request log:\n"
-	          << "-> " << buffer_string
-		      << "time: " << time
-		      << "\n\n";
+	std::cout << "request log:"
+              << "\nID: " << ID
+		      << "\ntime: " << time
+	          << method << path
+              << "\n\n";
 }
 
 
 std::ostream& operator<<(std::ostream& out, const Request& request)
 {
-	out << "Time: " << request.get_time() << '\n'
-		<< "-> " << request.get_request() << "\n\n";
+    out << "request log:"
+        << "\nID: " << request.get_ID()
+        << "\ntime: " << request.get_time()
+        << "\n" << request.get_method() << request.get_path()
+        << "\n\n";
 
 	return out;
 }
