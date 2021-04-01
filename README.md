@@ -1,13 +1,19 @@
-# http_server
-C++ library for quickly implementing a multithreaded HTTP/\*nix socket server
+# sentif
+friendly API for operating and interacting with web servers on unix systems
 
-# Features
-- TCP and UDP support 
-- Maintain client history for the lifetime of the program, log out
-- 2 runtime modes: default and interpreter
+# features
+- recieve from other processes
+- C++ api
+- command line interface
+- easily configurable
+- multithreaded
 
+cl usage
+```
+./sentif server1 $(pwd) -p 5555 -b 
+```
 
-Basic usage:
+embedded usage:
 ```
 #include <iostream>
 #include "server.h"
