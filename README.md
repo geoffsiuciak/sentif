@@ -16,11 +16,10 @@ make
 
 use the cl-interface:
 ```
-./sentif -n my_server -r $(pwd) -p 5555
+./sentif my_server $(pwd) -p 5555
 ```
 flags:
 ```
--r : set root directory
 -p : set port
 -t : use TCP
 -u : use UDP
