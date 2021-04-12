@@ -1,5 +1,5 @@
 # sentif
-friendly API for operating web servers on unix systems
+friendly web server framework and command line tool for unix systems 
 
 sentif offers two modes of operation:
 1. cl interface
