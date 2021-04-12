@@ -1,8 +1,7 @@
 #include "message.h"
 
 
-using namespace http;
-
+namespace http {
 
 
 Message::Message()
@@ -65,9 +64,5 @@ const std::vector<char>& Message::get_msg_content()
     return this->msg;
 }
 
-std::ostream &operator<<(std::ostream & os, const Message &msg)
-{
-    using namespace http;
-    
-    return os;
-}
+
+} // namespace http 

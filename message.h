@@ -1,5 +1,5 @@
-#ifndef MSG_CONTAINER_H
-#define MSG_CONTAINER_H
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
 #include <iostream>
 #include <ostream>
@@ -7,12 +7,10 @@
 #include <string>
 
 
-namespace http {
+namespace sentif {
 
-    class Message
-    {
-        friend std::ostream &operator<<(std::ostream &, const Message &);
-
+class Message {
+    
     public:
         Message();
         Message(const std::string &);
@@ -27,9 +25,8 @@ namespace http {
 
     private:
         std::vector<char> msg;
-    };
+};
 
-}
+} // namespace sentif
 
-
-#endif
+#endif // MESSAGE_H
