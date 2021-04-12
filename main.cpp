@@ -1,11 +1,11 @@
 #include <iostream>
 #include "server.h"
 
-// using namespace http;
+// using namespace sentif;
 
 int main(int argc, char** argv)
 {
-    http::Server s(argv);
+    sentif::WebServer s(atoi(argv[0]), argv[1]);
     s.go();
 	
 	// /* perform any action while server is running */
