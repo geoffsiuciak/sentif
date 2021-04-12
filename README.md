@@ -1,7 +1,7 @@
 # sentif
 friendly API for operating web servers on unix systems
 
-sentif offers several modes of operation:
+sentif offers two modes of operation:
 1. cl interface
 - run a simple or secure HTTP web or media server,
 - using TCP or UDP,
@@ -9,14 +9,14 @@ sentif offers several modes of operation:
 2. in another program
 - pull any of the tools from the sentif namespace into your project
 
-build all tools:
+build:
 ```
 make
 ```
 
 use the cl-interface:
 ```
-./sentif my_server -r $(pwd) -p 5555
+./sentif -n my_server -r $(pwd) -p 5555
 ```
 flags:
 ```
@@ -32,16 +32,14 @@ flags:
 or use in another project:
 ```
 #include <iostream>
-#include "server.h"
+#include "web_server.h"
 
-// using namespace sentif;
-
-int main(int argc, char** argv)
+int main()
 {
     int port = 5555;
     std::string root_dir = "your/path/here/";
 
-    sentif::Server s(root_dir, port);
+    sentif::WebServer s(root_dir, port, TCP);
     s.go();
 
     s.set_host_IP("10.0.0.175");
@@ -68,3 +66,8 @@ int main(int argc, char** argv)
     return 0;
 }
 ```
+
+
+to-do
+- reworking inheritances
+- main with getopt for cl usage
