@@ -16,7 +16,7 @@ make
 
 use the cl-interface:
 ```
-./sentif my_server $(pwd) -p 5555
+./sentif my_server $(pwd) -p 5555 -t
 ```
 flags:
 ```
