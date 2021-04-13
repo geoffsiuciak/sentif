@@ -30,6 +30,7 @@ namespace sentif {
 void bail(const char*);
 
 class ServerBase {
+    
     protected:
         ServerBase(int port);
         ~ServerBase();
