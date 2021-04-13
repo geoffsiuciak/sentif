@@ -28,7 +28,7 @@ namespace sentif {
 
 void bail(const char*);
 
-class WebServerTCP : public ServerBase {
+class WebServer : public ServerBase {
     
     public:
         WebServer(int port, char* root_dir);
