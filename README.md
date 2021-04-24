@@ -25,7 +25,7 @@ flags:
 -u : use UDP
 -s : use OpenSSL
 -b : run in background
--d : disable outlogging (requires -b)
+-d : disable outlogging
 ```
 
 or use in another project:
@@ -69,4 +69,5 @@ int main()
 
 to-do
 - reworking inheritances
-- main with getopt for cl usage
+- getopt lib?
+- c comps
