@@ -12,7 +12,7 @@ usage:              param:   desc:                                             n
 -u : UDP            void     use datagram control protocol over sockets        opt
 -m : multithread    int      use this many threads or default if invalid       opt
 -i : interaction    void     enable admin functionality using sentif client    opt 
--b : background     void     run in new solo process (retains -m and i)        opt
+-b : background     void     run in new solo process (retains -m and ii)       opt
 -l : logging        void     enable periodic output to logfile                 opt
 -o : logfile name   char*    otherwise defaults to sentif_log.txt              opt
 -h : help           void     display basic help file                           opt
