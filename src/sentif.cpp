@@ -45,3 +45,25 @@ int main(int argc, char *argv[])
             
     return 0;
 }
+
+void show_help()
+{
+    /* cat help.txt */
+    char buffer[1024];
+    int bytes;
+    int fd = open("help.txt", O_RDONLY);
+    while ((bytes = read(fd, buffer, 1024)) > 0)
+        write(1, buffer, bytes);
+}
+
+void init_bail(const char* msg)
+{
+    fprintf(stderr, "init_bail: %s.\n", msg);
+    exit(EXIT_FAILURE);
+}
+
+bool port_(char* optarg)
+{
+    // check for perm/avail on port
+    return true;
+}

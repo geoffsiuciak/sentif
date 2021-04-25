@@ -1,17 +1,73 @@
-                _   _  __ 
-               | | (_)/ _|
- ___  ___ _ __ | |_ _| |_ 
-/ __|/ _ \ '_ \| __| |  _|
-\__ \  __/ | | | |_| | |  
-|___/\___|_| |_|\__|_|_|
+# sentif
+friendly web server framework and command line tool for unix systems 
 
-usage:
+sentif offers two modes of operation:
+1. cl interface
+- run a simple or secure HTTP web or media server,
+- using TCP or UDP,
+- and interact/manage using the provided commands
+2. in another program
+- pull any of the tools from the sentif namespace into your project
+
+build:
+```
+make
+```
+
+use the cl-interface:
+```
+./sentif my_server $(pwd) -p 5555 -t
+```
+flags:
+```
 -p : set port
--r : set root directory
 -t : use TCP
 -u : use UDP
--i : enable interaction
+-s : use OpenSSL
 -b : run in background
--l : enable logging
--o : set logfile
+-d : disable outlogging
+```
 
+or use in another project:
+```
+#include <iostream>
+#include "web_server.h"
+
+int main()
+{
+    int port = 5555;
+    std::string root_dir = "your/path/here/";
+
+    sentif::WebServer s(root_dir, port, TCP);
+    s.go();
+
+    s.set_host_IP("10.0.0.175");
+    s.ban("10.0.0.123");
+    s.ban("10.0.0.456");
+    s.print_IP_banlist();
+
+    http::LocalClient lcl;
+    std::vector<http::Message> lr;
+
+    lr.push_back(lcl.GET("index.html"));
+    lr.push_back(lcl.GET("this_page.html"));
+    lr.push_back(lcl.GET("another.html"));
+
+    for (auto msg : lr) {
+        std::cout << msg;
+    }
+
+    s.show("10.0.0.789");
+    s.show("10.0.0.789");
+
+    /* any other code */
+
+    return 0;
+}
+```
+
+
+to-do
+- reworking inheritances
+- getopt lib?
+- c comps

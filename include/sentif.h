@@ -34,28 +34,8 @@ typedef struct sentif_options {
 	char* root_dir  { nullptr };
 } sentif_options_t;
 
-void init_bail(const char* msg)
-{
-	fprintf(stderr, "init_bail: %s.\n", msg);
-	exit(EXIT_FAILURE);	
-}
-
-void show_help()
-{
-	/* cat readme */
-	char buffer[1024];
-	int bytes;
-	
-	int fd = open("README.md", O_RDONLY);
-
-	while ((bytes = read(fd, buffer, 1024)) > 0)
-    	write(1, buffer, bytes);
-}
-
-bool port_(char* optarg)
-{
-	// check for perm/avail on port
-	return true;
-}
+void init_bail(const char* msg);
+void show_help();
+bool port_(char* optarg);
 
 #endif // SENTIF_H
