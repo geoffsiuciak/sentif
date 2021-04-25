@@ -1,0 +1,20 @@
+                _   _  __ 
+               | | (_)/ _|
+ ___  ___ _ __ | |_ _| |_ 
+/ __|/ _ \ '_ \| __| |  _|
+\__ \  __/ | | | |_| | |  
+|___/\___|_| |_|\__|_|_|
+
+usage:              param:   desc:                                             need:
+-p : port           int      unix port to serve on, perms/avail checked        req
+-r : root           char*    directory to serve from, permissions checked      req
+-t : TCP            void     use transfer control protocol over sockets        opt 
+-u : UDP            void     use datagram control protocol over sockets        opt
+-m : multithread    int      use this many threads or default if invalid       opt
+-i : interaction    void     enable admin functionality using sentif client    opt 
+-b : background     void     run in new solo process (retains -m and i)        opt
+-l : logging        void     enable periodic output to logfile                 opt
+-o : logfile name   char*    otherwise defaults to sentif_log.txt              opt
+-h : help           void     display basic help file                           opt
+-v : help verbose   void     display this file                                 opt
+
