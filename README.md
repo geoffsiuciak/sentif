@@ -1,34 +1,26 @@
-# sentif
-friendly web server framework and command line tool for unix systems 
+```
+                _   _  __ 
+               | | (_)/ _|
+ ___  ___ _ __ | |_ _| |_ 
+/ __|/ _ \ '_ \| __| |  _|
+\__ \  __/ | | | |_| | |  
+|___/\___|_| |_|\__|_|_|
 
-sentif offers two modes of operation:
-1. cl interface
-- run a simple or secure HTTP web or media server,
-- using TCP or UDP,
-- and interact/manage using the provided commands
-2. in another program
-- pull any of the tools from the sentif namespace into your project
+-p : port
+-r : root
+-t : TCP 
+-u : UDP
+-m : multithread
+-i : interaction 
+-b : background
+-l : logging
+-o : logfile name
+-h : help
+-v : help verbose
 
-build:
-```
-make
-```
-
-use the cl-interface:
-```
-./sentif my_server $(pwd) -p 5555 -t
-```
-flags:
-```
--p : set port
--t : use TCP
--u : use UDP
--s : use OpenSSL
--b : run in background
--d : disable outlogging
 ```
 
-or use in another project:
+or embed:
 ```
 #include <iostream>
 #include "web_server.h"
@@ -65,9 +57,3 @@ int main()
     return 0;
 }
 ```
-
-
-to-do
-- reworking inheritances
-- getopt lib?
-- c comps
