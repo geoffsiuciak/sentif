@@ -42,22 +42,14 @@ void init_bail(const char* msg)
 
 void show_help()
 {
-	const char files[2][9] = { "logo.txt", "help.txt" };
-	char *buffer;
+	/* cat readme */
+	char buffer[1024];
 	int bytes;
 	
-	for (int i = 0; i < 2; ++i) 
-	{
-		buffer = new char[1024];
-		int fd = open(files[i], O_RDONLY);
+	int fd = open("README.md", O_RDONLY);
 
-		while ((bytes = read(fd, buffer, 1024)) > 0)
-    		write(1, buffer, bytes);
-	
-		printf("\n");
-		close(fd);
-	}
-	delete[] buffer;
+	while ((bytes = read(fd, buffer, 1024)) > 0)
+    	write(1, buffer, bytes);
 }
 
 bool port_(char* optarg)
