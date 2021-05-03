@@ -23,13 +23,12 @@ build:
 ```
 make
 ```
-example
+example:
 ```
 ./sentif -p 5555 -a 9999 -t -r $(pwd)
 ```
 or use the classes elsewhere:
 ```
-#include <iostream>
 #include "web_server.h"
 
 int main()
