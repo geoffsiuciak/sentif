@@ -1,0 +1,21 @@
+                _   _  __ 
+               | | (_)/ _|
+ ___  ___ _ __ | |_ _| |_ 
+/ __|/ _ \ '_ \| __| |  _|
+\__ \  __/ | | | |_| | |  
+|___/\___|_| |_|\__|_|_|
+
+usage:              param:   desc:                                             need:
+-p : port           int      unix port to serve on, perms/avail checked        req
+-a : admin          int      enable and run admin service on this port         opt
+-r : root           char*    directory to serve from, permissions checked      req
+-t : TCP            void     use transmission control protocol over sockets    opt 
+-u : UDP            void     use user datagram protocol over sockets           opt
+-b : background     void     fork and run in new process (retains -a)          opt
+-d : disable log    void     disable periodic server activity logging          opt
+-o : log file       char*    set log file name, otherwise default              opt
+-e : err file       char*    set err file name, otherwise default              opt
+-s : show err       void     cat the contents of the error file                opt
+-h : help           void     display basic help file                           opt
+-v : help verbose   void     display this file                                 opt
+
