@@ -21,6 +21,8 @@ protected:
     void set_pw(int);
     void login();
     void go(int);
+    void stats();
+    void kill();
     void exit(const char *);
 
 private:

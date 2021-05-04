@@ -59,6 +59,8 @@ void Admin::go(int socket)
     else 
         login();
 
+    stats();
+
     while (ONLINE) {
         std::string cmd, arg;
         write_msg(FD, (char *)ADMIN_PROMPT);
@@ -72,7 +74,10 @@ void Admin::go(int socket)
         }
 
         if (cmd == "stats") {
-            ;
+            stats();
+        }
+        else if (cmd == "kill") {
+            kill();
         }
         else if (cmd == "exit") {
             this->exit("\ngoodbye!\n");
@@ -92,38 +97,18 @@ void Admin::exit(const char* msg)
     ONLINE = false;
 }
 
-// void Admin::interp_loop()
-// {
-// 	std::thread interp([this]() -> void {
-// 		// std::lock_guard<std::mutex> gaurd(this->Admin_lock);
-// 		while (RUNNING)
-// 		{ 
-// 			std::string entry;
-// 			std::cout << INTERP_PROMPT;
-// 			std::getline(std::cin, entry);
-// 			interpret(std::stringstream(entry));
-// 		}
-// 	});
-// 	interp.detach();
-// }
+void Admin::stats()
+{
+    time_t clk = time(NULL);
+    write_msg(FD, "\n");
+    write_msg(FD, ctime(&clk));
+    write_msg(FD, "\n");
+}
 
-
-// void Admin::interpret(std::stringstream&& entry) 
-// {
-// 	std::string cmd;
-// 	std::string arg;
-
-// 	entry >> cmd;
-// 	entry >> arg;
-
-// 	cmd == "ban"   ? ban(arg)     : 
-// 	cmd == "allow" ? allow(arg)   :
-// 	cmd == "show"  ? show(arg)    :
-// 	cmd == "kill"  ? kill()       :
-// 	cmd == ""      ? (void)[](){} : 
-// 	LOG("invalid command!");
-// }
-
+void Admin::kill()
+{
+    
+}
 
 // void Admin::allow(const std::string& IP)
 // {
