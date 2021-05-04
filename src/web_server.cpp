@@ -6,7 +6,8 @@ namespace sentif {
 
 WebServer::WebServer(ctx_t settings) : ServerBase(settings)
 {
-	auto* server_ptr = (sockaddr*)&server_info;
+    int requests = 0;
+    auto *server_ptr = (sockaddr *)&server_info;
 
     if ((server_socket = socket(DOMAIN, settings.protocol, 0)) < 0) 
         bail("failed to establish server socket");
@@ -88,11 +89,15 @@ void WebServer::go()
 
         bool ad = false;
         if (c_port == CLIENT) {
-            write(c_sock, c_msg, strlen(c_msg));
-            close(c_sock);
-        } else
-        if (c_port == ADMIN) {
-            std::thread as([this, c_sock]() { 
+            std::thread req([this, c_sock]() {
+                handle_request(c_sock);
+                // write(c_sock, c_msg, strlen(c_msg));
+                close(c_sock);
+            });
+            req.detach();
+        }
+        else if (c_port == ADMIN) {
+            std::thread a([this, c_sock]() { 
                 if (!admin.ONLINE)
                     admin.go(c_sock);
                 else {
@@ -100,11 +105,72 @@ void WebServer::go()
                     close(c_sock);
                 } 
             });
-            as.detach();
+            a.detach();
         } else {
             close(c_sock);
             bail("failed to match incoming socket");
         }
+    }
+}
+
+void WebServer::error_response(int socket, int error_code)
+{
+    char ec[3];
+    sprintf(ec, "%i", error_code);
+    
+    write_msg(socket, "<!DOCTYPE HTML><html><h1>server error ");
+    write_msg(socket, ec);
+    write_msg(socket, "</h1>\n");
+    write_msg(socket, "<p1><i>sentif server - ubuntu port ");
+
+    char pt[5];
+    sprintf(pt, "%i", this->settings.host);
+
+    write_msg(socket, pt);
+    write_msg(socket, "</i></p1></body></html>\n");
+}
+
+void WebServer::handle_request(int socket)
+{
+    ++requests;
+    
+    std::string request, method, path;
+    request = get_msg(socket);
+    std::stringstream ss(request);
+
+    ss >> method;
+    ss >> path;
+
+    if (method == "GET")
+    {
+        DIR *root_ptr = opendir(settings.root);
+        struct dirent* entry = nullptr;
+        int file_fd = 0;
+        path.erase(0, 1);
+
+        volatile bool served = false;
+        while ((entry = readdir(root_ptr)) != NULL && !served)
+        {
+            if (std::string(entry->d_name) == path) {
+                if (entry->d_type == DT_REG) 
+                {
+                    auto full_path = std::string(settings.root) + '/' + path;
+                    file_fd = open(full_path.c_str(), O_RDONLY, 0644);
+                    if (file_fd > 0) {
+                        write_file(socket, file_fd);
+                    } else {
+                        error_response(socket, INTERNAL_SERVER_ERROR);
+                    }
+                    served = true;
+                }
+                else if (entry->d_type == DT_DIR) {
+                    // dir hit
+                }
+            }
+        }
+        if (!served) error_response(socket, NOT_FOUND);
+    } else {
+        error_response(socket, BAD_REQUEST);
     }
 }
 
