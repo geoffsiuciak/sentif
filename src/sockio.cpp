@@ -42,4 +42,15 @@ std::string get_msg(int socket)
     return msg;
 }
 
+std::string get_packet(int socket)
+{
+    char buffer[IO_BUFSIZE*2];
+    memset(buffer, '\0', IO_BUFSIZE*2);
+    read(socket, buffer, IO_BUFSIZE*2);
+    auto msg = std::string(buffer);
+    // msg.erase(msg.end()-2, msg.end());
+    return msg;
+}
+
+
 } // namespace sentif

@@ -15,6 +15,7 @@ void write_file(int, int);
 void write_file(int, const char*);
 void write_msg(int, const char*);
 std::string get_msg(int);
+std::string get_packet(int);
 
 } // namespace sentif
 
