@@ -15,8 +15,10 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <ostream>
 #include <string>
 #include <thread>
+#include <mutex>
 
 #include "http.h"
 #include "server_base.h"
@@ -33,15 +35,18 @@ public:
     WebServer(ctx_t settings);
     ~WebServer();
     void go();
+    void kill() { RUNNING = false; }
 
 private:
     int which_accept(int[], int*, struct sockaddr_in *, socklen_t *);
     void handle_request(int);
     void error_response(int, int);
-    // void terminal_lognew(bool client_OK, const std::string& ip);
+    void welcome_response(int, const std::string &);
+    void terminal_log(const std::string &, const std::string&);
     int search(const std::string &);
 
 private:
+    std::mutex mtx;
     int requests;
     Admin admin;
     bool RUNNING;

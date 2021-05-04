@@ -84,10 +84,11 @@ void WebServer::go()
     while (RUNNING) {
         int c_port = 0;
         int c_sock = which_accept(socks, &c_port, &c_info, &c_size);
+        
+        time_t clk = time(NULL);
+        std::cout << "client " << inet_ntoa(c_info.sin_addr) << " - ";
+        std::cout << ctime(&clk);
 
-        char c_msg[21]{"u are a pleb client\n"};
-
-        bool ad = false;
         if (c_port == CLIENT) {
             std::thread req([this, c_sock]() {
                 handle_request(c_sock);
@@ -115,27 +116,20 @@ void WebServer::go()
 
 void WebServer::error_response(int socket, int error_code)
 {
-    char ec[3];
-    sprintf(ec, "%i", error_code);
-    
-    write_msg(socket, "<!DOCTYPE HTML><html><h1>server error ");
-    write_msg(socket, ec);
-    write_msg(socket, "</h1>\n");
-    write_msg(socket, "<p1><i>sentif server - ubuntu port ");
-
-    char pt[5];
-    sprintf(pt, "%i", this->settings.host);
-
-    write_msg(socket, pt);
-    write_msg(socket, "</i></p1></body></html>\n");
+    std::ostringstream out;
+    out << "<!DOCTYPE HTML><html><h1>server error " << error_code << "</h1>";
+    out << "<p1><i>sentif server - ubuntu port " << this->settings.host;
+    out << "</p1></i></html>";
+    std::string str = out.str();
+    write_msg(socket, str.c_str());
 }
 
 void WebServer::handle_request(int socket)
 {
     ++requests;
-    
-    std::string request, method, path;
-    request = get_msg(socket);
+
+    std::string request, method, path, version, vars;
+    request = get_packet(socket);
     std::stringstream ss(request);
 
     ss >> method;
@@ -143,69 +137,80 @@ void WebServer::handle_request(int socket)
 
     if (method == "GET")
     {
-        DIR *root_ptr = opendir(settings.root);
-        struct dirent* entry = nullptr;
-        int file_fd = 0;
-        path.erase(0, 1);
-
-        volatile bool served = false;
-        while ((entry = readdir(root_ptr)) != NULL && !served)
+        if (path == "/") 
         {
-            if (std::string(entry->d_name) == path) {
-                if (entry->d_type == DT_REG) 
-                {
-                    auto full_path = std::string(settings.root) + '/' + path;
-                    file_fd = open(full_path.c_str(), O_RDONLY, 0644);
-                    if (file_fd > 0) {
-                        write_file(socket, file_fd);
-                    } else {
-                        error_response(socket, INTERNAL_SERVER_ERROR);
+            auto full_path = std::string(settings.root) + "/index.html";
+            int file_fd = open(full_path.c_str(), O_RDONLY, 0644);
+            if (file_fd > 0) {
+                write_file(socket, file_fd);
+            } else {
+                error_response(socket, INTERNAL_SERVER_ERROR);
+            }
+        } 
+        else 
+        {
+            DIR *root_ptr = opendir(settings.root);
+            struct dirent* entry = nullptr;
+            int file_fd = 0;
+            path.erase(0, 1);
+
+            volatile bool served = false;
+            while ((entry = readdir(root_ptr)) != NULL && !served)
+            {
+                if (std::string(entry->d_name) == path) {
+                    if (entry->d_type == DT_REG) 
+                    {
+                        auto full_path = std::string(settings.root) + '/' + path;
+                        file_fd = open(full_path.c_str(), O_RDONLY, 0644);
+                        if (file_fd > 0) {
+                            write_file(socket, file_fd);
+                        } else {
+                            error_response(socket, INTERNAL_SERVER_ERROR);
+                        }
+                        served = true;
                     }
-                    served = true;
-                }
-                else if (entry->d_type == DT_DIR) {
-                    // dir hit
+                    else if (entry->d_type == DT_DIR) {
+                        // dir hit
+                    }
                 }
             }
+            if (!served) error_response(socket, NOT_FOUND);
         }
-        if (!served) error_response(socket, NOT_FOUND);
-    } else {
-        error_response(socket, BAD_REQUEST);
+    } 
+    else if (method == "POST") 
+    {
+        std::string post_var, username;
+        while (ss >> post_var) {
+            if (post_var.rfind("USER=", 0) == 0) {
+                username = post_var;
+                username.erase(username.begin(), username.begin()+5);
+                // std::cout << "USER: " << username << '\n';
+            } else {
+                // empty input
+            }
+        }
+        welcome_response(socket, username);
     }
+    else error_response(socket, METHOD_NOT_ALLOWED);
 }
 
-// void WebServer::terminal_lognew(bool client_OK, const sockaddr_in*)
-// {
-//     time_t clk = time(NULL);
-//     printf("client %i ", ip.c_str());
-//     if (!client_OK) printf(" DENIED ");
-//     printf("- %s", ctime(&clk));
-// }
-
-int WebServer::search(const std::string& path)
+void WebServer::welcome_response(int socket, const std::string& username)
 {
-	// DIR* root_ptr = opendir(ROOT);
-	// struct dirent* entry = nullptr;
-	// int target_fd = 0;
+    std::ostringstream out;
+    out << "<!DOCTYPE HTML><html><head><meta charset=\"UFT-8\" />";
+    out << "<title>welcome></title></head><body>";
+    out << "<h1>welcome back, " << username << "!</h1></body></html>";
+    std::string str = out.str();
+    write_msg(socket, str.c_str());
+}
 
-	// while ((entry = readdir(root_ptr)) != NULL && target_fd == 0) 
-	// {
-	// 	if (entry->d_name == path) {
-	// 		if (entry->d_type == DT_REG) 
-	// 		{
-	// 			std::string full_path = ROOT + '/' + path;
-	// 			const char* c_path = full_path.c_str();
-	// 			target_fd = open(c_path, O_RDONLY, 0644);
-	// 		}
-	// 		else if (entry->d_type == DT_DIR) {
-	// 			target_fd = -2;  // flag for now
-	// 		}
-	// 	}
-	// }
-	
-	// // std::cout << target_fd << '\n';
-	// return target_fd;
-    return 0;
+void WebServer::terminal_log(const std::string& ip, const std::string& request)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    time_t clk = time(NULL);
+    std::cout << ctime(&clk);
+    std::cout << " - client " << ip << " - ";
+    std::cout << request;
 }
 
 } // namespace sentif

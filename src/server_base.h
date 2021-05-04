@@ -49,7 +49,7 @@ public:
 
 private:
     virtual void go() = 0;
-    virtual void error_response() = 0;
+    // virtual void error_response() = 0;
     ctx_t settings;
     iplist_t banned;
     int admin_socket;
