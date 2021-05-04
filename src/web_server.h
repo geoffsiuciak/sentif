@@ -13,27 +13,34 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <thread>
 
-#include "config.h"
-#include "types.h"
 #include "server_base.h"
+
+
+#define NL '\n'
 
 namespace sentif {
 
 class WebServer : public ServerBase {
-    
-    public:
-        WebServer(ctx_t settings);
-        ~WebServer();
-        void go();
+    friend class Admin;
 
-    private:
-        void log_new(volatile bool, const char*);
-        int search(const std::string &);
+public:
+    WebServer(ctx_t settings);
+    ~WebServer();
+    void go();
 
-    private:
-        // std::map<std::string, std::vector<Request>> history;
+private:
+    int which_accept(int[], int*, struct sockaddr_in *, socklen_t *);
+    // void terminal_lognew(bool client_OK, const std::string& ip);
+    int search(const std::string &);
+
+private:
+    Admin admin;
+    bool RUNNING;
+    // std::map<std::string, std::vector<Request>> history;
 };
 
 } // namespace sentif

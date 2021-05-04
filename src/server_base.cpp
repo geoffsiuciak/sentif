@@ -4,11 +4,21 @@ namespace sentif {
 
 ServerBase::ServerBase(ctx_t ctx)
 {
+    admin_socket = 0;
+    server_socket = 0;
     this->settings = std::move(ctx);
+    
     memset(&server_info, 0, sizeof(server_info));
     server_info.sin_family = DOMAIN;
     server_info.sin_addr.s_addr = INADDR_ANY;   
 	server_info.sin_port = htons(settings.host);
+    
+    if (settings.admin > -1) {
+        memset(&admin_info, 0, sizeof(admin_info));
+        admin_info.sin_family = DOMAIN;
+        admin_info.sin_addr.s_addr = INADDR_ANY;   
+        admin_info.sin_port = htons(settings.admin);
+    }
 }
 
 ServerBase::~ServerBase() {}
