@@ -1,5 +1,5 @@
 COMP = g++
-FLAGS = -std=c++11 -pthread 
+FLAGS = -std=c++11 -pthread -Wall -Werror -pedantic 
 
 VPATH = src/
 

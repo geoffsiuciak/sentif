@@ -77,7 +77,7 @@ void Admin::go(int socket)
             stats();
         }
         else if (cmd == "kill") {
-            kill();
+            ; //
         }
         else if (cmd == "exit") {
             this->exit("\ngoodbye!\n");
@@ -105,10 +105,10 @@ void Admin::stats()
     write_msg(FD, "\n");
 }
 
-void Admin::kill()
-{
-    
-}
+// void Admin::kill()
+// {
+
+// }
 
 // void Admin::allow(const std::string& IP)
 // {

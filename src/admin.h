@@ -13,6 +13,8 @@
 
 namespace sentif {
 
+class WebServer;
+
 class Admin {
     friend class WebServer;
 
@@ -22,7 +24,7 @@ protected:
     void login();
     void go(int);
     void stats();
-    void kill();
+    // void kill();
     void exit(const char *);
 
 private:
